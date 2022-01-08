@@ -1,8 +1,16 @@
 package nl.thedutchruben.mccore;
 
 
-public final class Mccore {
+import org.bukkit.plugin.java.JavaPlugin;
 
-    public Mccore() {
+
+public final class Mccore {
+    private JavaPlugin javaPlugin;
+    public Mccore(JavaPlugin javaPlugin) {
+
+    }
+
+    public JavaPlugin getJavaPlugin() {
+        return javaPlugin;
     }
 }
