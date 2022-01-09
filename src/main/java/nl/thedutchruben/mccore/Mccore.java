@@ -7,9 +7,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Mccore {
     private JavaPlugin javaPlugin;
+
     public Mccore(JavaPlugin javaPlugin) {
         this.javaPlugin = javaPlugin;
-        new CommandRegistry();
+        try {
+            new CommandRegistry(this);
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     public JavaPlugin getJavaPlugin() {

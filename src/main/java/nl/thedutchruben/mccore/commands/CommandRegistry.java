@@ -7,7 +7,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.reflections.Reflections;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -21,37 +23,42 @@ public class CommandRegistry implements CommandExecutor {
         void handleFailure(CommandFailReason reason, CommandSender sender, TdrCommand command);
     }
 
-    public CommandRegistry() {
+    public CommandRegistry(Mccore mccore) throws InstantiationException, IllegalAccessException {
+        this.mccore = mccore;
         Reflections reflections = new Reflections("nl.thedutchruben");
-        Set<Class<? extends Object>> allClasses = reflections.getSubTypesOf(Object.class);
+        Set<Class<?>> allClasses = reflections.getTypesAnnotatedWith(nl.thedutchruben.mccore.commands.Command.class);
+
+        System.out.println("Loading all classes");
         for (Class<?> allClass : allClasses) {
-            nl.thedutchruben.mccore.commands.Command an = allClasses.getClass().getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
-            if(an != null){
-                for (Method method : allClass.getMethods()) {
-                    nl.thedutchruben.mccore.commands.SubCommand annotation = method.getAnnotation(nl.thedutchruben.mccore.commands.SubCommand.class);
 
-                    if (annotation != null) {
-                        PluginCommand basePluginCommand = mccore.getJavaPlugin().getServer().getPluginCommand(an.command());
+            nl.thedutchruben.mccore.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
+            TdrCommand tdrCommand = new TdrCommand(an);
+            for (Method method : allClass.getMethods()) {
+                System.out.println(method.getName());
+                SubCommand annotation = method.getAnnotation(SubCommand.class);
 
-                        basePluginCommand.setExecutor(this);
-                        commandMap.put(annotation.subCommand(), new TdrCommand(method, allClass, an,annotation));
-                    }
+                if (annotation != null) {
+                    PluginCommand basePluginCommand = mccore.getJavaPlugin().getServer().getPluginCommand(an.command());
+
+                    basePluginCommand.setExecutor(this);
+                    tdrCommand.getSubCommand().put(annotation.subCommand(),new TdrSubCommand(method,allClass.newInstance(),annotation));
                 }
             }
+            commandMap.put(an.command(),tdrCommand);
 
         }
 
     }
 
 
-enum CommandFailReason {
-    INSUFFICIENT_PARAMETER,
-    REDUNDANT_PARAMETER,
-    NO_PERMISSION,
-    NOT_PLAYER,
-    COMMAND_NOT_FOUND,
-    REFLECTION_ERROR
-}
+    enum CommandFailReason {
+        INSUFFICIENT_PARAMETER,
+        REDUNDANT_PARAMETER,
+        NO_PERMISSION,
+        NOT_PLAYER,
+        COMMAND_NOT_FOUND,
+        REFLECTION_ERROR
+    }
 
     /**
      * Executes the given command, returning its success.
@@ -67,6 +74,38 @@ enum CommandFailReason {
      */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = -1; i <= args.length - 1; i++) {
+            if (i == -1)
+                sb.append(command.getName().toLowerCase());
+            else
+                sb.append(" ").append(args[i].toLowerCase());
+
+            for (String usage : commandMap.keySet()) {
+
+                if (usage.equals(sb.toString())) {
+
+                    TdrCommand wrapper = commandMap.get(usage);
+                    nl.thedutchruben.mccore.commands.Command commanddata =  wrapper.getCommand();
+
+                    TdrSubCommand annotation = wrapper.getSubCommand().get(args[0]);
+                    if(annotation == null){
+                        annotation = wrapper.getSubCommand().get("");
+                    }
+                    String[] actualParams = Arrays.copyOfRange(args, (annotation.getSubCommand().subCommand()).split(" ").length - 1, args.length);
+                    System.out.println(Arrays.toString(actualParams));
+                    try {
+                        annotation.getMethod().invoke(annotation.getInstance(), sender, actualParams);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                    return true;
+                }
+            }
+        }
+
+        // If we go here, there are no registered commands matching player's input
+        failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, null);
         return false;
     }
 }

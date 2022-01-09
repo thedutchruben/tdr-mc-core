@@ -1,19 +1,28 @@
 package nl.thedutchruben.mccore.commands;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class TdrCommand {
-    private Object instance;
 
-    private Method method;
     private Command command;
-    private SubCommand subCommand;
+    private Map<String,TdrSubCommand> subCommand;
 
-    public TdrCommand(Method method, Object instance,Command command, SubCommand subCommand) {
-        this.method = method;
-        this.instance = instance;
+    public TdrCommand(Command command) {
+
         this.command = command;
-        this.subCommand = subCommand;
+        this.subCommand = new HashMap<>();
+    }
+
+
+    public Command getCommand() {
+        return command;
+    }
+
+    public Map<String, TdrSubCommand> getSubCommand() {
+        return subCommand;
     }
 }
 
