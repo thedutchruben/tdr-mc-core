@@ -6,12 +6,14 @@ public class TdrCommand {
     private Object instance;
 
     private Method method;
-    private Command annotation;
+    private Command command;
+    private SubCommand subCommand;
 
-    public TdrCommand(Method method, Object instance, Command annotation) {
+    public TdrCommand(Method method, Object instance,Command command, SubCommand subCommand) {
         this.method = method;
         this.instance = instance;
-        this.annotation = annotation;
+        this.command = command;
+        this.subCommand = subCommand;
     }
 }
 

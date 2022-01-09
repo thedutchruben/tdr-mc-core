@@ -6,13 +6,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Command {
-    String command();
+@Target(ElementType.METHOD)
+public @interface SubCommand {
+    String subCommand();
 
     String description() default "";
 
     String permission() default "";
+
+    String usage() default "";
+
+    int params() default 0;
 
     boolean console() default false;
 }

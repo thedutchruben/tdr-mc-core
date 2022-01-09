@@ -5,11 +5,12 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
+import org.reflections.Reflections;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class CommandRegistry implements CommandExecutor {
     private Mccore mccore;
@@ -20,18 +21,26 @@ public class CommandRegistry implements CommandExecutor {
         void handleFailure(CommandFailReason reason, CommandSender sender, TdrCommand command);
     }
 
-    public void registerCommands(Object object) {
-        for (Method method : object.getClass().getMethods()) {
-            nl.thedutchruben.mccore.commands.Command annotation = method.getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
+    public CommandRegistry() {
+        Reflections reflections = new Reflections("nl.thedutchruben");
+        Set<Class<? extends Object>> allClasses = reflections.getSubTypesOf(Object.class);
+        for (Class<?> allClass : allClasses) {
+            nl.thedutchruben.mccore.commands.Command an = allClasses.getClass().getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
+            if(an != null){
+                for (Method method : allClass.getMethods()) {
+                    nl.thedutchruben.mccore.commands.SubCommand annotation = method.getAnnotation(nl.thedutchruben.mccore.commands.SubCommand.class);
 
-            if (annotation != null) {
-                String base = annotation.command().split(" ")[0].substring(1);
-                PluginCommand basePluginCommand = mccore.getJavaPlugin().getServer().getPluginCommand(base);
+                    if (annotation != null) {
+                        PluginCommand basePluginCommand = mccore.getJavaPlugin().getServer().getPluginCommand(an.command());
 
-                basePluginCommand.setExecutor(this);
-                commandMap.put(annotation.command().substring(1), new TdrCommand(method, object, annotation));
+                        basePluginCommand.setExecutor(this);
+                        commandMap.put(annotation.subCommand(), new TdrCommand(method, allClass, an,annotation));
+                    }
+                }
             }
+
         }
+
     }
 
 
