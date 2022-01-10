@@ -17,10 +17,19 @@ import java.util.Set;
 public class CommandRegistry implements CommandExecutor {
     private Mccore mccore;
     private Map<String, TdrCommand> commandMap = new HashMap<>();
-    private CommandFailureHandler failureHandler = (sender, reason, command) -> {};
+    public CommandFailureHandler failureHandler = (sender, reason, command) -> {};
 
     public interface CommandFailureHandler {
         void handleFailure(CommandFailReason reason, CommandSender sender, TdrCommand command);
+    }
+
+
+    public CommandFailureHandler getFailureHandler() {
+        return failureHandler;
+    }
+
+    public void setFailureHandler(CommandFailureHandler failureHandler) {
+        this.failureHandler = failureHandler;
     }
 
     public CommandRegistry(Mccore mccore) throws InstantiationException, IllegalAccessException {
@@ -28,18 +37,17 @@ public class CommandRegistry implements CommandExecutor {
         Reflections reflections = new Reflections("nl.thedutchruben");
         Set<Class<?>> allClasses = reflections.getTypesAnnotatedWith(nl.thedutchruben.mccore.commands.Command.class);
 
-        System.out.println("Loading all classes");
         for (Class<?> allClass : allClasses) {
 
             nl.thedutchruben.mccore.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
             TdrCommand tdrCommand = new TdrCommand(an);
             for (Method method : allClass.getMethods()) {
-                System.out.println(method.getName());
                 SubCommand annotation = method.getAnnotation(SubCommand.class);
 
                 if (annotation != null) {
                     PluginCommand basePluginCommand = mccore.getJavaPlugin().getServer().getPluginCommand(an.command());
-
+                    basePluginCommand.setDescription(an.description());
+                    basePluginCommand.setAliases(Arrays.asList(an.aliases()));
                     basePluginCommand.setExecutor(this);
                     tdrCommand.getSubCommand().put(annotation.subCommand(),new TdrSubCommand(method,allClass.newInstance(),annotation));
                 }
@@ -51,7 +59,7 @@ public class CommandRegistry implements CommandExecutor {
     }
 
 
-    enum CommandFailReason {
+    public enum CommandFailReason {
         INSUFFICIENT_PARAMETER,
         REDUNDANT_PARAMETER,
         NO_PERMISSION,
@@ -88,13 +96,25 @@ public class CommandRegistry implements CommandExecutor {
                     TdrCommand wrapper = commandMap.get(usage);
                     nl.thedutchruben.mccore.commands.Command commanddata =  wrapper.getCommand();
 
+                    if (!commanddata.permission().equals("") && !sender.hasPermission(commanddata.permission())) {
+                        failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper);
+                        return true;
+                    }
+
                     TdrSubCommand annotation = wrapper.getSubCommand().get(args[0]);
                     if(annotation == null){
                         annotation = wrapper.getSubCommand().get("");
                     }
+
+                    if (!annotation.getSubCommand().permission().equals("") && !sender.hasPermission(annotation.getSubCommand().permission())) {
+                        failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper);
+                        return true;
+                    }
+
                     String[] actualParams = Arrays.copyOfRange(args, (annotation.getSubCommand().subCommand()).split(" ").length - 1, args.length);
                     System.out.println(Arrays.toString(actualParams));
                     try {
+
                         annotation.getMethod().invoke(annotation.getInstance(), sender, actualParams);
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();

@@ -11,7 +11,13 @@ public final class Mccore {
     public Mccore(JavaPlugin javaPlugin) {
         this.javaPlugin = javaPlugin;
         try {
-            new CommandRegistry(this);
+            CommandRegistry commandRegistry = new CommandRegistry(this);
+            commandRegistry.setFailureHandler((reason, sender, command) -> {
+                switch (reason) {
+                    case COMMAND_NOT_FOUND:
+                        sender.sendMessage("Can't find the command. Please check your spellings!");            break;
+                }
+            });
         } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
