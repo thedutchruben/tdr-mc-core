@@ -10,8 +10,8 @@ import org.bukkit.command.CommandSender;
         permission = "tdrmccore.command.tdrmcccore")
 public class TdrMcCoreCommand {
 
-    @SubCommand(subCommand = "",usage = "")
+    @SubCommand(subCommand = "info")
     public void main(CommandSender commandSender,String[] args){
-
+        commandSender.sendMessage("Tdrmccore version 1.0");
     }
 }

@@ -5,6 +5,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.command.defaults.BukkitCommand;
+import org.bukkit.craftbukkit.v1_18_R1.CraftServer;
 import org.reflections.Reflections;
 
 import java.lang.reflect.InvocationTargetException;
@@ -17,10 +19,10 @@ import java.util.Set;
 public class CommandRegistry implements CommandExecutor {
     private Mccore mccore;
     private Map<String, TdrCommand> commandMap = new HashMap<>();
-    public CommandFailureHandler failureHandler = (sender, reason, command) -> {};
+    public CommandFailureHandler failureHandler = (sender, reason, command,subCommand) -> {};
 
     public interface CommandFailureHandler {
-        void handleFailure(CommandFailReason reason, CommandSender sender, TdrCommand command);
+        void handleFailure(CommandFailReason reason, CommandSender sender, TdrCommand command,TdrSubCommand tdrSubCommand);
     }
 
 
@@ -38,13 +40,25 @@ public class CommandRegistry implements CommandExecutor {
         Set<Class<?>> allClasses = reflections.getTypesAnnotatedWith(nl.thedutchruben.mccore.commands.Command.class);
 
         for (Class<?> allClass : allClasses) {
-
+            System.out.println(allClass.getName());
             nl.thedutchruben.mccore.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
             TdrCommand tdrCommand = new TdrCommand(an);
+            BukkitCommand bukkitCommand = new BukkitCommand(an.command()) {
+                @Override
+                public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+
+                    return false;
+                }
+            };
+
+
+            bukkitCommand.setDescription(an.description());
+            ((CraftServer) mccore.getJavaPlugin().getServer()).getCommandMap().register(an.command(), bukkitCommand);
             for (Method method : allClass.getMethods()) {
                 SubCommand annotation = method.getAnnotation(SubCommand.class);
 
                 if (annotation != null) {
+
                     PluginCommand basePluginCommand = mccore.getJavaPlugin().getServer().getPluginCommand(an.command());
                     basePluginCommand.setDescription(an.description());
                     basePluginCommand.setAliases(Arrays.asList(an.aliases()));
@@ -97,7 +111,7 @@ public class CommandRegistry implements CommandExecutor {
                     nl.thedutchruben.mccore.commands.Command commanddata =  wrapper.getCommand();
 
                     if (!commanddata.permission().equals("") && !sender.hasPermission(commanddata.permission())) {
-                        failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper);
+                        failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper,null);
                         return true;
                     }
 
@@ -107,7 +121,7 @@ public class CommandRegistry implements CommandExecutor {
                     }
 
                     if (!annotation.getSubCommand().permission().equals("") && !sender.hasPermission(annotation.getSubCommand().permission())) {
-                        failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper);
+                        failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper,annotation);
                         return true;
                     }
 
@@ -124,8 +138,7 @@ public class CommandRegistry implements CommandExecutor {
             }
         }
 
-        // If we go here, there are no registered commands matching player's input
-        failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, null);
+        failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, null,null);
         return false;
     }
 }
