@@ -36,24 +36,14 @@ public class CommandRegistry implements CommandExecutor {
 
     public CommandRegistry(Mccore mccore) throws InstantiationException, IllegalAccessException {
         this.mccore = mccore;
-        Reflections reflections = new Reflections("nl.thedutchruben");
+        System.out.println(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1]);
+        Reflections reflections = new Reflections(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1]);
         Set<Class<?>> allClasses = reflections.getTypesAnnotatedWith(nl.thedutchruben.mccore.commands.Command.class);
 
         for (Class<?> allClass : allClasses) {
             System.out.println(allClass.getName());
             nl.thedutchruben.mccore.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
             TdrCommand tdrCommand = new TdrCommand(an);
-            BukkitCommand bukkitCommand = new BukkitCommand(an.command()) {
-                @Override
-                public boolean execute(CommandSender sender, String commandLabel, String[] args) {
-
-                    return false;
-                }
-            };
-
-
-            bukkitCommand.setDescription(an.description());
-            ((CraftServer) mccore.getJavaPlugin().getServer()).getCommandMap().register(an.command(), bukkitCommand);
             for (Method method : allClass.getMethods()) {
                 SubCommand annotation = method.getAnnotation(SubCommand.class);
 
@@ -116,8 +106,11 @@ public class CommandRegistry implements CommandExecutor {
                     }
 
                     TdrSubCommand annotation = wrapper.getSubCommand().get(args[0]);
-                    if(annotation == null){
-                        annotation = wrapper.getSubCommand().get("");
+                    if(args[0] == null){
+                        annotation = wrapper.getSubCommand().get(" ");
+                    }else{
+                        failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, wrapper,null);
+                        return true;
                     }
 
                     if (!annotation.getSubCommand().permission().equals("") && !sender.hasPermission(annotation.getSubCommand().permission())) {
