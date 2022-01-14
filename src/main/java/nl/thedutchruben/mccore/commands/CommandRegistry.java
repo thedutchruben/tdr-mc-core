@@ -36,12 +36,10 @@ public class CommandRegistry implements CommandExecutor {
 
     public CommandRegistry(Mccore mccore) throws InstantiationException, IllegalAccessException {
         this.mccore = mccore;
-        System.out.println(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1]);
         Reflections reflections = new Reflections(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1]);
         Set<Class<?>> allClasses = reflections.getTypesAnnotatedWith(nl.thedutchruben.mccore.commands.Command.class);
 
         for (Class<?> allClass : allClasses) {
-            System.out.println(allClass.getName());
             nl.thedutchruben.mccore.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
             TdrCommand tdrCommand = new TdrCommand(an);
             for (Method method : allClass.getMethods()) {
