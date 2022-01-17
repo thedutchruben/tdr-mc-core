@@ -11,8 +11,9 @@ public class ListenersRegistry {
     public ListenersRegistry(Mccore mccore) {
         this.mccore = mccore;
         Reflections reflections = new Reflections(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1]);
-        Set<Class<?>> allClasses = reflections.getTypesAnnotatedWith(Listener.class);
+        Set<Class<?>> allClasses = reflections.getTypesAnnotatedWith(TDRListener.class);
         for (Class<?> allClass : allClasses) {
+            System.out.println(allClass.getName());
             try {
                 mccore.getJavaPlugin().getServer().getPluginManager().registerEvents((org.bukkit.event.Listener) allClass.newInstance(),mccore.getJavaPlugin());
             } catch (InstantiationException | IllegalAccessException e) {
