@@ -1,25 +1,54 @@
 package nl.thedutchruben.mccore.commands;
 
 import nl.thedutchruben.mccore.Mccore;
+import org.bukkit.Bukkit;
+import org.bukkit.command.*;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.craftbukkit.v1_18_R1.CraftServer;
+import org.bukkit.util.StringUtil;
 import org.reflections.Reflections;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.logging.Level;
 
-public class CommandRegistry implements CommandExecutor {
+public class CommandRegistry implements CommandExecutor, TabCompleter {
     private Mccore mccore;
     private Map<String, TdrCommand> commandMap = new HashMap<>();
     public CommandFailureHandler failureHandler = (sender, reason, command,subCommand) -> {};
+
+    @Override
+    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] strings) {
+        final List<String> completions = new ArrayList<>();
+        final Set<String> COMMANDS = new HashSet<>();
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = -1; i <= strings.length - 1; i++) {
+            if (i == -1)
+                sb.append(command.getName().toLowerCase());
+            else
+                sb.append(" ").append(strings[i].toLowerCase());
+
+            for (String usage : commandMap.keySet()) {
+
+                if (usage.equals(sb.toString())) {
+
+                    TdrCommand wrapper = commandMap.get(usage);
+                    wrapper.getSubCommand().forEach((s1, subCommand) -> {
+                        if(commandSender.hasPermission(subCommand.getSubCommand().permission())){
+                            COMMANDS.add(s1);
+                        }
+                    });
+                }
+            }
+        }
+
+        StringUtil.copyPartialMatches(strings[0], COMMANDS, completions);
+        Collections.sort(completions);
+        return completions;
+    }
 
     public interface CommandFailureHandler {
         void handleFailure(CommandFailReason reason, CommandSender sender, TdrCommand command,TdrSubCommand tdrSubCommand);
@@ -51,8 +80,16 @@ public class CommandRegistry implements CommandExecutor {
                     basePluginCommand.setDescription(an.description());
                     basePluginCommand.setAliases(Arrays.asList(an.aliases()));
                     basePluginCommand.setExecutor(this);
+                    basePluginCommand.setTabCompleter(this);
                     tdrCommand.getSubCommand().put(annotation.subCommand(),new TdrSubCommand(method,allClass.newInstance(),annotation));
                 }
+                Default aDefault = method.getAnnotation(Default.class);
+
+                if (aDefault != null) {
+                    tdrCommand.setaDefault(aDefault);
+                    tdrCommand.setDefaultCommand(new TdrSubCommand(method,allClass.newInstance(),annotation));
+                }
+
             }
             commandMap.put(an.command(),tdrCommand);
 
@@ -103,13 +140,19 @@ public class CommandRegistry implements CommandExecutor {
                         return true;
                     }
 
+                    Bukkit.getLogger().log(Level.INFO, Arrays.toString(args));
+                    Bukkit.getLogger().log(Level.INFO, Arrays.toString(wrapper.getSubCommand().keySet().toArray(new String[0])));
                     TdrSubCommand annotation = wrapper.getSubCommand().get(args[0]);
                     if(args[0] == null){
-                        annotation = wrapper.getSubCommand().get(" ");
-                    }else{
+                        annotation = wrapper.getDefaultCommand();
+                    }
+
+                    if(annotation == null){
                         failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, wrapper,null);
                         return true;
                     }
+
+
 
                     if (!annotation.getSubCommand().permission().equals("") && !sender.hasPermission(annotation.getSubCommand().permission())) {
                         failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper,annotation);
