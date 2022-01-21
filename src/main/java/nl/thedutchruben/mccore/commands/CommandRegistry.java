@@ -1,13 +1,14 @@
 package nl.thedutchruben.mccore.commands;
 
+import lombok.SneakyThrows;
 import nl.thedutchruben.mccore.Mccore;
+import nl.thedutchruben.mccore.utils.classes.ClassFinder;
 import org.bukkit.Bukkit;
 import org.bukkit.command.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.craftbukkit.v1_18_R1.CraftServer;
 import org.bukkit.util.StringUtil;
-import org.reflections.Reflections;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -63,35 +64,37 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
         this.failureHandler = failureHandler;
     }
 
+    @SneakyThrows
     public CommandRegistry(Mccore mccore) throws InstantiationException, IllegalAccessException {
         this.mccore = mccore;
-        Reflections reflections = new Reflections(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1]);
-        Set<Class<?>> allClasses = reflections.getTypesAnnotatedWith(nl.thedutchruben.mccore.commands.Command.class);
 
-        for (Class<?> allClass : allClasses) {
-            nl.thedutchruben.mccore.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
-            TdrCommand tdrCommand = new TdrCommand(an);
-            for (Method method : allClass.getMethods()) {
-                SubCommand annotation = method.getAnnotation(SubCommand.class);
+        for (Class<?> allClass : new ClassFinder().findClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
+            System.out.println(allClass.getName());
+            if(allClass.isAnnotationPresent(nl.thedutchruben.mccore.commands.Command.class)){
+                nl.thedutchruben.mccore.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
+                TdrCommand tdrCommand = new TdrCommand(an);
+                for (Method method : allClass.getMethods()) {
+                    SubCommand annotation = method.getAnnotation(SubCommand.class);
 
-                if (annotation != null) {
+                    if (annotation != null) {
 
-                    PluginCommand basePluginCommand = mccore.getJavaPlugin().getServer().getPluginCommand(an.command());
-                    basePluginCommand.setDescription(an.description());
-                    basePluginCommand.setAliases(Arrays.asList(an.aliases()));
-                    basePluginCommand.setExecutor(this);
-                    basePluginCommand.setTabCompleter(this);
-                    tdrCommand.getSubCommand().put(annotation.subCommand(),new TdrSubCommand(method,allClass.newInstance(),annotation));
+                        PluginCommand basePluginCommand = mccore.getJavaPlugin().getServer().getPluginCommand(an.command());
+                        basePluginCommand.setDescription(an.description());
+                        basePluginCommand.setAliases(Arrays.asList(an.aliases()));
+                        basePluginCommand.setExecutor(this);
+                        basePluginCommand.setTabCompleter(this);
+                        tdrCommand.getSubCommand().put(annotation.subCommand(),new TdrSubCommand(method,allClass.newInstance(),annotation));
+                    }
+                    Default aDefault = method.getAnnotation(Default.class);
+
+                    if (aDefault != null) {
+                        tdrCommand.setaDefault(aDefault);
+                        tdrCommand.setDefaultCommand(new TdrSubCommand(method,allClass.newInstance(),annotation));
+                    }
+
                 }
-                Default aDefault = method.getAnnotation(Default.class);
-
-                if (aDefault != null) {
-                    tdrCommand.setaDefault(aDefault);
-                    tdrCommand.setDefaultCommand(new TdrSubCommand(method,allClass.newInstance(),annotation));
-                }
-
+                commandMap.put(an.command(),tdrCommand);
             }
-            commandMap.put(an.command(),tdrCommand);
 
         }
 
@@ -140,11 +143,12 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                         return true;
                     }
 
-                    Bukkit.getLogger().log(Level.INFO, Arrays.toString(args));
-                    Bukkit.getLogger().log(Level.INFO, Arrays.toString(wrapper.getSubCommand().keySet().toArray(new String[0])));
-                    TdrSubCommand annotation = wrapper.getSubCommand().get(args[0]);
-                    if(args[0] == null){
+
+                    TdrSubCommand annotation = null;
+                    if(args.length == 0){
                         annotation = wrapper.getDefaultCommand();
+                    }else{
+                        annotation = wrapper.getSubCommand().get(args[0]);
                     }
 
                     if(annotation == null){
@@ -160,7 +164,13 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                     }
 
                     String[] actualParams = Arrays.copyOfRange(args, (annotation.getSubCommand().subCommand()).split(" ").length - 1, args.length);
-                    System.out.println(Arrays.toString(actualParams));
+
+                    if(annotation.getSubCommand().params() != 0){
+                        if(actualParams.length != annotation.getSubCommand().params()){
+                            failureHandler.handleFailure(CommandFailReason.INSUFFICIENT_PARAMETER, sender, wrapper,annotation);
+                            return true;
+                        }
+                    }
                     try {
 
                         annotation.getMethod().invoke(annotation.getInstance(), sender, actualParams);
