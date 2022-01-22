@@ -69,7 +69,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
         this.mccore = mccore;
 
         for (Class<?> allClass : new ClassFinder().findClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
-            System.out.println(allClass.getName());
             if(allClass.isAnnotationPresent(nl.thedutchruben.mccore.commands.Command.class)){
                 nl.thedutchruben.mccore.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
                 TdrCommand tdrCommand = new TdrCommand(an);
