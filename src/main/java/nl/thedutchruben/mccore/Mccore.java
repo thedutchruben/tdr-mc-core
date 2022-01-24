@@ -3,8 +3,14 @@ package nl.thedutchruben.mccore;
 
 import nl.thedutchruben.mccore.commands.CommandRegistry;
 import nl.thedutchruben.mccore.listeners.ListenersRegistry;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public final class Mccore {
@@ -37,6 +43,29 @@ public final class Mccore {
         } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
+
+
+        CommandRegistry.getTabCompleteble().put("player", commandSender -> {
+            List<String> players = new ArrayList<>();
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                if(commandSender instanceof Player){
+                    if(((Player) commandSender).canSee(onlinePlayer)){
+                        players.add(onlinePlayer.getName());
+                    }
+                }else{
+                    players.add(onlinePlayer.getName());
+                }
+            }
+            return players;
+        });
+
+        CommandRegistry.getTabCompleteble().put("plugin", commandSender -> {
+            List<String> complete = new ArrayList<>();
+            for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
+                complete.add(plugin.getName());
+            }
+            return complete;
+        });
 
         new ListenersRegistry(this);
     }

@@ -3,51 +3,70 @@ package nl.thedutchruben.mccore.commands;
 import lombok.SneakyThrows;
 import nl.thedutchruben.mccore.Mccore;
 import nl.thedutchruben.mccore.utils.classes.ClassFinder;
-import org.bukkit.Bukkit;
-import org.bukkit.command.*;
 import org.bukkit.command.Command;
-import org.bukkit.command.defaults.BukkitCommand;
-import org.bukkit.craftbukkit.v1_18_R1.CraftServer;
+import org.bukkit.command.*;
 import org.bukkit.util.StringUtil;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.logging.Level;
 
 public class CommandRegistry implements CommandExecutor, TabCompleter {
     private Mccore mccore;
     private Map<String, TdrCommand> commandMap = new HashMap<>();
     public CommandFailureHandler failureHandler = (sender, reason, command,subCommand) -> {};
+    private static Map<String, TabComplete> tabCompleteble = new HashMap<>();
 
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] strings) {
         final List<String> completions = new ArrayList<>();
         final Set<String> COMMANDS = new HashSet<>();
-
         StringBuilder sb = new StringBuilder();
-        for (int i = -1; i <= strings.length - 1; i++) {
-            if (i == -1)
-                sb.append(command.getName().toLowerCase());
-            else
-                sb.append(" ").append(strings[i].toLowerCase());
+        if(strings.length == 1){
+            for (int i = -1; i <= 0; i++) {
+                if (i == -1)
+                    sb.append(command.getName().toLowerCase());
+                else
+                    sb.append(" ").append(strings[i].toLowerCase());
 
-            for (String usage : commandMap.keySet()) {
-
-                if (usage.equals(sb.toString())) {
-
+                for (String usage : commandMap.keySet()) {
                     TdrCommand wrapper = commandMap.get(usage);
-                    wrapper.getSubCommand().forEach((s1, subCommand) -> {
-                        if(commandSender.hasPermission(subCommand.getSubCommand().permission())){
-                            COMMANDS.add(s1);
-                        }
-                    });
+                    if (usage.equals(sb.toString())) {
+
+                        wrapper.getSubCommand().forEach((s1, subCommand) -> {
+                            if(commandSender.hasPermission(subCommand.getSubCommand().permission())){
+                                COMMANDS.add(s1);
+                            }
+                        });
+                    }
                 }
+                StringUtil.copyPartialMatches(strings[0], COMMANDS, completions);
+                Collections.sort(completions);
+
             }
         }
 
-        StringUtil.copyPartialMatches(strings[0], COMMANDS, completions);
-        Collections.sort(completions);
+
+        System.out.println("command name:" + command.getName());
+        if(strings.length != 1){
+            TdrCommand wrapper = commandMap.get(command.getName());
+            if(wrapper.getSubCommand().get(strings[0]) != null){
+                List<String> list = new LinkedList();
+                for (String s1 : wrapper.getSubCommand().get(strings[0]).getSubCommand().usage().split(" ")) {
+                    list.add(s1.replace("<","").replace(">",""));
+                }
+                if(list.get(strings.length - 2) != null){
+                    TabComplete tabComplete = tabCompleteble.get(list.get(strings.length - 2));
+                    if(tabComplete != null){
+                        COMMANDS.addAll(tabComplete.getCompletions(commandSender));
+                    }
+                }
+                System.out.println(strings.length);
+            }
+            StringUtil.copyPartialMatches(strings[strings.length-1], COMMANDS, completions);
+            Collections.sort(completions);
+        }
+
         return completions;
     }
 
@@ -183,5 +202,9 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
 
         failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, null,null);
         return false;
+    }
+
+    public static Map<String, TabComplete> getTabCompleteble() {
+        return tabCompleteble;
     }
 }

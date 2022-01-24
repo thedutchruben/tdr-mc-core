@@ -1,7 +1,5 @@
 package nl.thedutchruben.mccore.commands.mccore;
 
-import nl.thedutchruben.mccore.commands.Command;
-import nl.thedutchruben.mccore.commands.SubCommand;
 import org.bukkit.command.CommandSender;
 
 

@@ -4,7 +4,6 @@ package nl.thedutchruben.mccore.utils.classes;
 import com.google.common.reflect.ClassPath;
 import lombok.SneakyThrows;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 

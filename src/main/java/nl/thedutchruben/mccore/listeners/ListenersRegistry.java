@@ -3,8 +3,6 @@ package nl.thedutchruben.mccore.listeners;
 import nl.thedutchruben.mccore.Mccore;
 import nl.thedutchruben.mccore.utils.classes.ClassFinder;
 
-import java.util.Set;
-
 public class ListenersRegistry {
     private Mccore mccore;
 
