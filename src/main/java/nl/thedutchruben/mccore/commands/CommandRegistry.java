@@ -15,7 +15,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
     private Mccore mccore;
     private Map<String, TdrCommand> commandMap = new HashMap<>();
     public CommandFailureHandler failureHandler = (sender, reason, command,subCommand) -> {};
-    private static Map<String, TabComplete> tabCompleteble = new HashMap<>();
+    private static Map<String, TabComplete> tabCompletable = new HashMap<>();
 
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] strings) {
@@ -56,7 +56,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                     list.add(s1.replace("<","").replace(">",""));
                 }
                 if(list.get(strings.length - 2) != null){
-                    TabComplete tabComplete = tabCompleteble.get(list.get(strings.length - 2));
+                    TabComplete tabComplete = tabCompletable.get(list.get(strings.length - 2));
                     if(tabComplete != null){
                         COMMANDS.addAll(tabComplete.getCompletions(commandSender));
                     }
@@ -204,7 +204,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
         return false;
     }
 
-    public static Map<String, TabComplete> getTabCompleteble() {
-        return tabCompleteble;
+    public static Map<String, TabComplete> getTabCompletable() {
+        return tabCompletable;
     }
 }

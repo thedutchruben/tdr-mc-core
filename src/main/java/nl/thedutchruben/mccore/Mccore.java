@@ -6,11 +6,14 @@ import nl.thedutchruben.mccore.listeners.ListenersRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public final class Mccore {
@@ -45,24 +48,32 @@ public final class Mccore {
         }
 
 
-        CommandRegistry.getTabCompleteble().put("player", commandSender -> {
-            List<String> players = new ArrayList<>();
+        CommandRegistry.getTabCompletable().put("player", commandSender -> {
+            Set<String> complete = new HashSet<>();
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                 if(commandSender instanceof Player){
                     if(((Player) commandSender).canSee(onlinePlayer)){
-                        players.add(onlinePlayer.getName());
+                        complete.add(onlinePlayer.getName());
                     }
                 }else{
-                    players.add(onlinePlayer.getName());
+                    complete.add(onlinePlayer.getName());
                 }
             }
-            return players;
+            return complete;
         });
 
-        CommandRegistry.getTabCompleteble().put("plugin", commandSender -> {
-            List<String> complete = new ArrayList<>();
+        CommandRegistry.getTabCompletable().put("plugin", commandSender -> {
+            Set<String> complete = new HashSet<>();
             for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
                 complete.add(plugin.getName());
+            }
+            return complete;
+        });
+
+        CommandRegistry.getTabCompletable().put("permission", commandSender -> {
+            Set<String> complete = new HashSet<>();
+            for (Permission permission : Bukkit.getPluginManager().getPermissions()) {
+                complete.add(permission.getName());
             }
             return complete;
         });

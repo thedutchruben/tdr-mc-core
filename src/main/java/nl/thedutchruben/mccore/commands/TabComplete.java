@@ -3,7 +3,8 @@ package nl.thedutchruben.mccore.commands;
 import org.bukkit.command.CommandSender;
 
 import java.util.List;
+import java.util.Set;
 
 public interface TabComplete {
-    List<String> getCompletions(CommandSender commandSender);
+    Set<String> getCompletions(CommandSender commandSender);
 }
