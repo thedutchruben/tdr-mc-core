@@ -3,6 +3,7 @@ package nl.thedutchruben.mccore;
 
 import nl.thedutchruben.mccore.commands.CommandRegistry;
 import nl.thedutchruben.mccore.listeners.ListenersRegistry;
+import nl.thedutchruben.mccore.runnables.RunnableRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -62,6 +63,34 @@ public final class Mccore {
             return complete;
         });
 
+        CommandRegistry.getTabCompletable().put("playername", commandSender -> {
+            Set<String> complete = new HashSet<>();
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                if(commandSender instanceof Player){
+                    if(((Player) commandSender).canSee(onlinePlayer)){
+                        complete.add(onlinePlayer.getName());
+                    }
+                }else{
+                    complete.add(onlinePlayer.getName());
+                }
+            }
+            return complete;
+        });
+
+        CommandRegistry.getTabCompletable().put("uuid", commandSender -> {
+            Set<String> complete = new HashSet<>();
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                if(commandSender instanceof Player){
+                    if(((Player) commandSender).canSee(onlinePlayer)){
+                        complete.add(onlinePlayer.getUniqueId().toString());
+                    }
+                }else{
+                    complete.add(onlinePlayer.getUniqueId().toString());
+                }
+            }
+            return complete;
+        });
+
         CommandRegistry.getTabCompletable().put("plugin", commandSender -> {
             Set<String> complete = new HashSet<>();
             for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
@@ -79,6 +108,8 @@ public final class Mccore {
         });
 
         new ListenersRegistry(this);
+
+        new RunnableRegistry(this);
     }
 
     public static Mccore getInstance() {

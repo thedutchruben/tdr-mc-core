@@ -19,6 +19,8 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] strings) {
+        System.out.println(Arrays.toString(strings));
+        System.out.println(strings.length);
         final List<String> completions = new ArrayList<>();
         final Set<String> COMMANDS = new HashSet<>();
         StringBuilder sb = new StringBuilder();
@@ -55,13 +57,14 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                 for (String s1 : wrapper.getSubCommand().get(strings[0]).getSubCommand().usage().split(" ")) {
                     list.add(s1.replace("<","").replace(">",""));
                 }
-                if(list.get(strings.length - 2) != null){
                     TabComplete tabComplete = tabCompletable.get(list.get(strings.length - 2));
                     if(tabComplete != null){
-                        COMMANDS.addAll(tabComplete.getCompletions(commandSender));
+                        for (String completion : tabComplete.getCompletions(commandSender)) {
+                            COMMANDS.add(completion.replace(" ","_"));
+                        }
                     }
-                }
-                System.out.println(strings.length);
+
+
             }
             StringUtil.copyPartialMatches(strings[strings.length-1], COMMANDS, completions);
             Collections.sort(completions);
@@ -165,8 +168,10 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                     TdrSubCommand annotation = null;
                     if(args.length == 0){
                         annotation = wrapper.getDefaultCommand();
-                    }else{
+                    }else if(wrapper.getSubCommand().get(args[0]) != null){
                         annotation = wrapper.getSubCommand().get(args[0]);
+                    }else{
+                        annotation = wrapper.getSubCommand().get("");
                     }
 
                     if(annotation == null){
@@ -184,7 +189,9 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                     String[] actualParams = Arrays.copyOfRange(args, (annotation.getSubCommand().subCommand()).split(" ").length - 1, args.length);
 
                     if(annotation.getSubCommand().params() != 0){
-                        if(actualParams.length != annotation.getSubCommand().params()){
+                        System.out.println(actualParams.length);
+                        System.out.println(annotation.getSubCommand().params());
+                        if(actualParams.length - 1 != annotation.getSubCommand().params()){
                             failureHandler.handleFailure(CommandFailReason.INSUFFICIENT_PARAMETER, sender, wrapper,annotation);
                             return true;
                         }

@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface SyncRepeatingTask {
+public @interface ASyncRepeatingTask {
 
     int startTime() default 20;
 
