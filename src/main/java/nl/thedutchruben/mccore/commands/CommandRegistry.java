@@ -145,6 +145,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
      */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        System.out.println(Arrays.toString(args));
         StringBuilder sb = new StringBuilder();
         for (int i = -1; i <= args.length - 1; i++) {
             if (i == -1)
@@ -185,7 +186,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                         failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper,annotation);
                         return true;
                     }
-
+                    System.out.println(Arrays.toString(args));
                     String[] actualParams = Arrays.copyOfRange(args, (annotation.getSubCommand().subCommand()).split(" ").length - 1, args.length);
 
                     if(annotation.getSubCommand().params() != 0){

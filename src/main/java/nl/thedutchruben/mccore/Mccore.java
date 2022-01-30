@@ -6,6 +6,8 @@ import nl.thedutchruben.mccore.listeners.ListenersRegistry;
 import nl.thedutchruben.mccore.runnables.RunnableRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.World;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
@@ -95,6 +97,22 @@ public final class Mccore {
             Set<String> complete = new HashSet<>();
             for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
                 complete.add(plugin.getName());
+            }
+            return complete;
+        });
+
+        CommandRegistry.getTabCompletable().put("world", commandSender -> {
+            Set<String> complete = new HashSet<>();
+            for (World world : Bukkit.getWorlds()) {
+                complete.add(world.getName());
+            }
+            return complete;
+        });
+
+        CommandRegistry.getTabCompletable().put("entitytype", commandSender -> {
+            Set<String> complete = new HashSet<>();
+            for (EntityType value : EntityType.values()) {
+                complete.add(value.getKey().getKey());
             }
             return complete;
         });
