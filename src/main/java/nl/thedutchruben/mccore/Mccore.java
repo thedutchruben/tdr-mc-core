@@ -6,6 +6,7 @@ import nl.thedutchruben.mccore.listeners.ListenersRegistry;
 import nl.thedutchruben.mccore.runnables.RunnableRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -113,6 +114,14 @@ public final class Mccore {
             Set<String> complete = new HashSet<>();
             for (EntityType value : EntityType.values()) {
                 complete.add(value.getKey().getKey());
+            }
+            return complete;
+        });
+
+        CommandRegistry.getTabCompletable().put("material", commandSender -> {
+            Set<String> complete = new HashSet<>();
+            for (Material value : Material.values()) {
+                complete.add(value.name());
             }
             return complete;
         });

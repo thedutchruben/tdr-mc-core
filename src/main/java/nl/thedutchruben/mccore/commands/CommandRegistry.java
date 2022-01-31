@@ -49,7 +49,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
         }
 
 
-        System.out.println("command name:" + command.getName());
         if(strings.length != 1){
             TdrCommand wrapper = commandMap.get(command.getName());
             if(wrapper.getSubCommand().get(strings[0]) != null){
