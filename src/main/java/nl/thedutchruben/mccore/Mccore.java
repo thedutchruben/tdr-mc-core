@@ -24,6 +24,10 @@ public final class Mccore {
     private JavaPlugin javaPlugin;
     private static Mccore instance;
 
+    /**
+     * Start application
+     * @param javaPlugin
+     */
     public Mccore(JavaPlugin javaPlugin) {
         this.javaPlugin = javaPlugin;
         instance = this;
