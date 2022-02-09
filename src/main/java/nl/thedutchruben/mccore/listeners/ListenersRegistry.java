@@ -9,7 +9,7 @@ public class ListenersRegistry {
     public ListenersRegistry(Mccore mccore) {
         this.mccore = mccore;
 
-        for (Class<?> allClass : new ClassFinder().findClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
+        for (Class<?> allClass : new ClassFinder().getClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
             if(allClass.isAnnotationPresent(TDRListener.class)){
                 try {
                     mccore.getJavaPlugin().getServer().getPluginManager().registerEvents((org.bukkit.event.Listener) allClass.newInstance(),mccore.getJavaPlugin());

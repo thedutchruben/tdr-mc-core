@@ -11,7 +11,7 @@ public class RunnableRegistry {
     public RunnableRegistry(Mccore mccore) {
         this.mccore = mccore;
 
-        for (Class<?> allClass : new ClassFinder().findClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
+        for (Class<?> allClass : new ClassFinder().getClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
             if(allClass.isAnnotationPresent(ASyncRepeatingTask.class)){
                 ASyncRepeatingTask annotation = allClass.getAnnotation(ASyncRepeatingTask.class);
                 try {

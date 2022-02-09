@@ -19,8 +19,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] strings) {
-        System.out.println(Arrays.toString(strings));
-        System.out.println(strings.length);
         final List<String> completions = new ArrayList<>();
         final Set<String> COMMANDS = new HashSet<>();
         StringBuilder sb = new StringBuilder();
@@ -85,11 +83,11 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
         this.failureHandler = failureHandler;
     }
 
-    @SneakyThrows
+
     public CommandRegistry(Mccore mccore) throws InstantiationException, IllegalAccessException {
         this.mccore = mccore;
 
-        for (Class<?> allClass : new ClassFinder().findClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
+        for (Class<?> allClass : new ClassFinder().getClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
             if(allClass.isAnnotationPresent(nl.thedutchruben.mccore.commands.Command.class)){
                 nl.thedutchruben.mccore.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
                 TdrCommand tdrCommand = new TdrCommand(an);
@@ -144,7 +142,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
      */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        System.out.println(Arrays.toString(args));
         StringBuilder sb = new StringBuilder();
         for (int i = -1; i <= args.length - 1; i++) {
             if (i == -1)
@@ -185,20 +182,16 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                         failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper,annotation);
                         return true;
                     }
-                    System.out.println(Arrays.toString(args));
                     String[] actualParams = Arrays.copyOfRange(args, (annotation.getSubCommand().subCommand()).split(" ").length - 1, args.length);
 
                     if(annotation.getSubCommand().params() != 0){
-                        System.out.println(actualParams.length);
-                        System.out.println(annotation.getSubCommand().params());
                         if(actualParams.length - 1 != annotation.getSubCommand().params()){
                             failureHandler.handleFailure(CommandFailReason.INSUFFICIENT_PARAMETER, sender, wrapper,annotation);
                             return true;
                         }
                     }
                     try {
-
-                        annotation.getMethod().invoke(annotation.getInstance(), sender, actualParams);
+                         annotation.getMethod().invoke(annotation.getInstance(), sender, actualParams);
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
