@@ -27,4 +27,12 @@ public class MessageUtil {
         player.spigot().sendMessage(component);
     }
 
+    public void sendUrlMessage(CommandSender player, String message, String url, String description) {
+        TextComponent component = new TextComponent(TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', message)));
+        component.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,  url));
+        component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(description)));
+
+        player.spigot().sendMessage(component);
+    }
+
 }

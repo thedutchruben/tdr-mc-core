@@ -1,5 +1,6 @@
 package nl.thedutchruben.mccore.commands;
 
+import com.google.common.base.CharMatcher;
 import lombok.SneakyThrows;
 import nl.thedutchruben.mccore.Mccore;
 import nl.thedutchruben.mccore.utils.classes.ClassFinder;
@@ -10,6 +11,8 @@ import org.bukkit.util.StringUtil;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CommandRegistry implements CommandExecutor, TabCompleter {
     private Mccore mccore;
@@ -54,12 +57,15 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                 for (String s1 : wrapper.getSubCommand().get(strings[0]).getSubCommand().usage().split(" ")) {
                     list.add(s1.replace("<","").replace(">",""));
                 }
+
+                if(list.get(strings.length - 2) != null){
                     TabComplete tabComplete = tabCompletable.get(list.get(strings.length - 2));
                     if(tabComplete != null){
                         for (String completion : tabComplete.getCompletions(commandSender)) {
                             COMMANDS.add(completion.replace(" ","_"));
                         }
                     }
+                }
 
 
             }
@@ -142,6 +148,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
      */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        System.out.println(String.join(",",args));
         StringBuilder sb = new StringBuilder();
         for (int i = -1; i <= args.length - 1; i++) {
             if (i == -1)
@@ -182,16 +189,32 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                         failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper,annotation);
                         return true;
                     }
+                    //create,"test,test",21-02-2022,10:00:00,11:00:00,test
                     String[] actualParams = Arrays.copyOfRange(args, (annotation.getSubCommand().subCommand()).split(" ").length - 1, args.length);
-
+                    List<String> params = new ArrayList<>();
+                    StringBuilder combineString = new StringBuilder();
+                    //"testings,123"
+                    for (String actualParam : actualParams) {
+                        if(actualParam.startsWith("\"") && actualParam.endsWith("\"")) {
+                            params.add(actualParam.replaceAll("\"",""));
+                        }else if(actualParam.startsWith("\"")){
+                            combineString = new StringBuilder(actualParam.substring(1));
+                        }else if(actualParam.endsWith("\"")){
+                            combineString.append(" ");
+                            combineString.append(actualParam, 0, actualParam.length() - 1);
+                            params.add(combineString.toString());
+                        }else{
+                            params.add(actualParam);
+                        }
+                    }
                     if(annotation.getSubCommand().params() != 0){
-                        if(actualParams.length - 1 != annotation.getSubCommand().params()){
+                        if(params.size() - 1 != annotation.getSubCommand().params()){
                             failureHandler.handleFailure(CommandFailReason.INSUFFICIENT_PARAMETER, sender, wrapper,annotation);
                             return true;
                         }
                     }
                     try {
-                         annotation.getMethod().invoke(annotation.getInstance(), sender, actualParams);
+                         annotation.getMethod().invoke(annotation.getInstance(), sender, params);
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
