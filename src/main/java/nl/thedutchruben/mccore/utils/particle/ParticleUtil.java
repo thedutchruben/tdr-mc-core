@@ -22,4 +22,13 @@ public class ParticleUtil {
             length += space;
         }
     }
+
+    public void summonCircle(Location location, int size, Particle particle) {
+        for (int d = 0; d <= 90; d += 1) {
+            Location particleLoc = new Location(location.getWorld(), location.getX(), location.getY(), location.getZ());
+            particleLoc.setX(location.getX() + Math.cos(d) * size);
+            particleLoc.setZ(location.getZ() + Math.sin(d) * size);
+            location.getWorld().spawnParticle(particle, particleLoc, 1);
+        }
+    }
 }
