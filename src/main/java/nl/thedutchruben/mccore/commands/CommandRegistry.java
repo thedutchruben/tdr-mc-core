@@ -15,7 +15,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CommandRegistry implements CommandExecutor, TabCompleter {
-    private Mccore mccore;
     private Map<String, TdrCommand> commandMap = new HashMap<>();
     public CommandFailureHandler failureHandler = (sender, reason, command,subCommand) -> {};
     private static Map<String, TabComplete> tabCompletable = new HashMap<>();
@@ -91,7 +90,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
 
 
     public CommandRegistry(Mccore mccore) throws InstantiationException, IllegalAccessException {
-        this.mccore = mccore;
 
         for (Class<?> allClass : new ClassFinder().getClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
             if(allClass.isAnnotationPresent(nl.thedutchruben.mccore.commands.Command.class)){

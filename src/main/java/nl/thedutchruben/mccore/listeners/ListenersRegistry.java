@@ -4,10 +4,8 @@ import nl.thedutchruben.mccore.Mccore;
 import nl.thedutchruben.mccore.utils.classes.ClassFinder;
 
 public class ListenersRegistry {
-    private Mccore mccore;
 
     public ListenersRegistry(Mccore mccore) {
-        this.mccore = mccore;
 
         for (Class<?> allClass : new ClassFinder().getClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
             if(allClass.isAnnotationPresent(TDRListener.class)){
