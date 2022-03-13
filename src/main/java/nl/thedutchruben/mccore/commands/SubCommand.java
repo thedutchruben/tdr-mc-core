@@ -16,7 +16,9 @@ public @interface SubCommand {
 
     String usage() default "";
 
-    int params() default 0;
+    int minParams() default 0;
+
+    int maxParams() default 0;
 
     boolean console() default false;
 }

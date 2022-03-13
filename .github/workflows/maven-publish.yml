@@ -7,9 +7,7 @@ on:
   release:
     types: [created]
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [master]
 
 jobs:
   build:

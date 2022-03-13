@@ -28,7 +28,7 @@ public class TdrCommand {
         this.aDefault = aDefault;
     }
 
-    public Default getaDefault() {
+    public Default getDefault() {
         return aDefault;
     }
 

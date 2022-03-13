@@ -12,4 +12,10 @@ public @interface Default {
     String permission() default "";
 
     boolean console() default false;
+
+    String usage() default "";
+
+    int minParams() default 0;
+
+    int maxParams() default 0;
 }
