@@ -8,7 +8,7 @@ import nl.thedutchruben.mccore.utils.config.FileManager;
 
 public class YamlDatabase extends Database {
     private YamlDatabaseConfig databaseConfig;
-    private FileManager fileManager;
+    private FileManager.Config fileManager;
     /**
      * Startup of the database
      */

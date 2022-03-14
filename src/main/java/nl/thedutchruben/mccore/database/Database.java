@@ -11,7 +11,6 @@ public abstract class Database {
      */
     public abstract void connect(DatabaseConfig databaseConfig) throws ExecutionException, InterruptedException;
 
-
     /**
      * Remove the connection of the database
      */
