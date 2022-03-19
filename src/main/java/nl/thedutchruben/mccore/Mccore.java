@@ -2,12 +2,15 @@ package nl.thedutchruben.mccore;
 
 
 import nl.thedutchruben.mccore.commands.CommandRegistry;
+import nl.thedutchruben.mccore.config.UpdateCheckerConfig;
 import nl.thedutchruben.mccore.listeners.ListenersRegistry;
 import nl.thedutchruben.mccore.runnables.RunnableRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
@@ -18,18 +21,20 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 
 
 public final class Mccore {
     private JavaPlugin javaPlugin;
     private static Mccore instance;
-
+    private String tdrId;
     /**
      * Start application
      * @param javaPlugin
      */
-    public Mccore(JavaPlugin javaPlugin) {
+    public Mccore(JavaPlugin javaPlugin,String tdrId) {
         this.javaPlugin = javaPlugin;
+        this.tdrId = tdrId;
         instance = this;
         try {
             CommandRegistry commandRegistry = new CommandRegistry(this);
@@ -143,11 +148,37 @@ public final class Mccore {
         new RunnableRegistry(this);
     }
 
+    public void startUpdateChecker(UpdateCheckerConfig updateCheckerConfig)
+    {
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this.javaPlugin, () -> getUpdate(Bukkit.getConsoleSender()),0,updateCheckerConfig.getCheckTime());
+
+    }
+
+    public void getUpdate(CommandSender commandSender){
+        String url = "api.theduchruben.nl/api/v1/spigot/plugin/" + this.tdrId + "/version";
+        Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
+            //todo send request
+            String data = "{pluginId:'13',spigotId:'1234',version:'1.1.1}";
+            String pluginVersion = javaPlugin.getDescription().getVersion();
+            if(true){
+                commandSender.sendMessage("New update version %version %!");
+            }else{
+                if(commandSender instanceof ConsoleCommandSender){
+                    Bukkit.getLogger().log(Level.INFO,"No update found");
+                }
+            }
+        });
+    }
+
     public static Mccore getInstance() {
         return instance;
     }
 
     public JavaPlugin getJavaPlugin() {
         return javaPlugin;
+    }
+
+    public String getTdrId() {
+        return tdrId;
     }
 }
