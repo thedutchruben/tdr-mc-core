@@ -10,6 +10,7 @@ import nl.thedutchruben.mccore.commands.CommandRegistry;
 import nl.thedutchruben.mccore.config.UpdateCheckerConfig;
 import nl.thedutchruben.mccore.listeners.ListenersRegistry;
 import nl.thedutchruben.mccore.runnables.RunnableRegistry;
+import nl.thedutchruben.mccore.updates.PlayerLoginListener;
 import nl.thedutchruben.mccore.utils.message.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -39,6 +40,7 @@ import java.util.logging.Level;
 public final class Mccore {
     private JavaPlugin javaPlugin;
     private static Mccore instance;
+    private UpdateCheckerConfig updateCheckerConfig;
     private String tdrId;
     /**
      * Start application
@@ -163,6 +165,7 @@ public final class Mccore {
     public void startUpdateChecker(UpdateCheckerConfig updateCheckerConfig)
     {
         Bukkit.getScheduler().runTaskTimerAsynchronously(this.javaPlugin, () -> getUpdate(Bukkit.getConsoleSender()),60,updateCheckerConfig.getCheckTime());
+        Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(this),javaPlugin);
     }
 
     @SneakyThrows
@@ -186,18 +189,18 @@ public final class Mccore {
             String pluginVersion = javaPlugin.getDescription().getVersion();
             int diff = versionCompare(jsonObject.get("version").getAsString(),pluginVersion);
              if(diff > 0){
-                 commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7There is a plugin update of &9 "+javaPlugin.getDescription().getName()+" &7 available."));
+                 commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7There is a plugin update of &9"+javaPlugin.getDescription().getName()+"&7 available."));
                  if(commandSender instanceof Player){
-                     commandSender.spigot().sendMessage(new ComponentBuilder().append("&9&l")
-                             .append(MessageUtil.getUrlMessage("Download",jsonObject.get("downloadUrl").getAsString(),"Download newest version"))
-                             .append(" &7 | &9&l ")
-                             .append(MessageUtil.getUrlMessage("Donate",jsonObject.get("donateUrl").getAsString(),"Donate a coffee"))
-                             .append(" &7 | &9&l ")
-                             .append(MessageUtil.getUrlMessage("Changelog",jsonObject.get("changeLog").getAsString(),"See what is changed")).create());
+                     commandSender.spigot().sendMessage(new ComponentBuilder()
+                             .append(MessageUtil.getUrlMessage("&9&lDownload",jsonObject.get("downloadUrl").getAsString(),"Download newest version"))
+                             .append(ChatColor.translateAlternateColorCodes('&'," &7 | "))
+                             .append(MessageUtil.getUrlMessage("&9&lDonate",jsonObject.get("donateUrl").getAsString(),"Donate a coffee"))
+                             .append(ChatColor.translateAlternateColorCodes('&'," &7 | "))
+                             .append(MessageUtil.getUrlMessage("&9&lChangelog",jsonObject.get("changeLog").getAsString(),"See what is changed")).create());
                  }else{
-                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lDownload: " + jsonObject.get("downloadUrl").getAsString()));
-                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lDonate: " + jsonObject.get("donateUrl").getAsString()));
-                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lChangelog: " + jsonObject.get("changeLog").getAsString()));
+                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lDownload: &r&7" + jsonObject.get("downloadUrl").getAsString()));
+                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lDonate: &r&7"+ jsonObject.get("donateUrl").getAsString()));
+                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lChangelog: &r&7" + jsonObject.get("changeLog").getAsString()));
                  }
                  commandSender.sendMessage(" ");
                  commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&8Lastest version: &a"+jsonObject.get("version").getAsString()+"&8 | Your version: &c" + pluginVersion));
@@ -259,5 +262,9 @@ public final class Mccore {
 
     public String getTdrId() {
         return tdrId;
+    }
+
+    public UpdateCheckerConfig getUpdateCheckerConfig() {
+        return updateCheckerConfig;
     }
 }
