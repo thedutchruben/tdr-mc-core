@@ -10,6 +10,13 @@ import org.bukkit.util.Vector;
 @UtilityClass
 public class ParticleUtil {
 
+    /**
+     * Draw a paricle lineß
+     * @param point1
+     * @param point2
+     * @param space
+     * @param particle
+     */
     public void drawLine(Location point1, Location point2, double space, Particle particle) {
         World world = point1.getWorld();
         double distance = point1.distance(point2);
@@ -23,6 +30,12 @@ public class ParticleUtil {
         }
     }
 
+    /**
+     * Create a circle particle
+     * @param location
+     * @param size
+     * @param particle
+     */
     public void summonCircle(Location location, int size, Particle particle) {
         for (int d = 0; d <= 90; d += 1) {
             Location particleLoc = new Location(location.getWorld(), location.getX(), location.getY(), location.getZ());

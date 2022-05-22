@@ -205,6 +205,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                             params.add(actualParam);
                         }
                     }
+                    
                     if(annotation.getSubCommand().minParams() != 0){
                         if(params.size() - 1 >= annotation.getSubCommand().minParams() && params.size() - 1 <= annotation.getSubCommand().maxParams()){
                             failureHandler.handleFailure(CommandFailReason.INSUFFICIENT_PARAMETER, sender, wrapper,annotation);
