@@ -146,7 +146,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
      */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        System.out.println(String.join(",",args));
         StringBuilder sb = new StringBuilder();
         for (int i = -1; i <= args.length - 1; i++) {
             if (i == -1)
