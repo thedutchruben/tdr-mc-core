@@ -1,7 +1,5 @@
-package nl.thedutchruben.mccore.commands;
+package nl.thedutchruben.mccore.spigot.commands;
 
-import com.google.common.base.CharMatcher;
-import lombok.SneakyThrows;
 import nl.thedutchruben.mccore.Mccore;
 import nl.thedutchruben.mccore.utils.classes.ClassFinder;
 import org.bukkit.command.Command;
@@ -11,8 +9,6 @@ import org.bukkit.util.StringUtil;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class CommandRegistry implements CommandExecutor, TabCompleter {
     private Map<String, TdrCommand> commandMap = new HashMap<>();
@@ -57,14 +53,20 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                     list.add(s1.replace("<","").replace(">",""));
                 }
 
-                if(list.get(strings.length - 2) != null){
-                    TabComplete tabComplete = tabCompletable.get(list.get(strings.length - 2));
-                    if(tabComplete != null){
-                        for (String completion : tabComplete.getCompletions(commandSender)) {
-                            COMMANDS.add(completion.replace(" ","_"));
+                if(strings.length - 2 <= wrapper.getSubCommand().get(strings[0]).getSubCommand().maxParams()){
+                    System.out.println(list.size());
+                    System.out.println(strings.length);
+                    if(list.get(strings.length - 2) != null){
+                        TabComplete tabComplete = tabCompletable.get(list.get(strings.length - 2));
+                        if(tabComplete != null){
+                            for (String completion : tabComplete.getCompletions(commandSender)) {
+                                COMMANDS.add(completion.replace(" ","_"));
+                            }
                         }
                     }
                 }
+
+
 
 
             }
@@ -92,8 +94,8 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
     public CommandRegistry(Mccore mccore) throws InstantiationException, IllegalAccessException {
 
         for (Class<?> allClass : new ClassFinder().getClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
-            if(allClass.isAnnotationPresent(nl.thedutchruben.mccore.commands.Command.class)){
-                nl.thedutchruben.mccore.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.commands.Command.class);
+            if(allClass.isAnnotationPresent(nl.thedutchruben.mccore.spigot.commands.Command.class)){
+                nl.thedutchruben.mccore.spigot.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.spigot.commands.Command.class);
                 TdrCommand tdrCommand = new TdrCommand(an);
                 for (Method method : allClass.getMethods()) {
                     SubCommand annotation = method.getAnnotation(SubCommand.class);
@@ -158,7 +160,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                 if (usage.equals(sb.toString())) {
 
                     TdrCommand wrapper = commandMap.get(usage);
-                    nl.thedutchruben.mccore.commands.Command commanddata =  wrapper.getCommand();
+                    nl.thedutchruben.mccore.spigot.commands.Command commanddata =  wrapper.getCommand();
 
                     if (!commanddata.permission().equals("") && !sender.hasPermission(commanddata.permission())) {
                         failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper,null);
@@ -204,8 +206,10 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                             params.add(actualParam);
                         }
                     }
+
+
                     if(annotation.getSubCommand().minParams() != 0){
-                        if(params.size() - 1 >= annotation.getSubCommand().minParams() && params.size() - 1 <= annotation.getSubCommand().maxParams()){
+                        if(params.size() < annotation.getSubCommand().minParams() || params.size()  > annotation.getSubCommand().maxParams()){
                             failureHandler.handleFailure(CommandFailReason.INSUFFICIENT_PARAMETER, sender, wrapper,annotation);
                             return true;
                         }

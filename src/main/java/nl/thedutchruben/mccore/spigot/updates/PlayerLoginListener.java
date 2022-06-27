@@ -1,4 +1,4 @@
-package nl.thedutchruben.mccore.updates;
+package nl.thedutchruben.mccore.spigot.updates;
 
 import nl.thedutchruben.mccore.Mccore;
 import org.bukkit.event.EventHandler;

@@ -1,4 +1,4 @@
-package nl.thedutchruben.mccore.listeners;
+package nl.thedutchruben.mccore.spigot.listeners;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

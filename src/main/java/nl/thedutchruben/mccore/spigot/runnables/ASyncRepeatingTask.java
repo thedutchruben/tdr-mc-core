@@ -1,4 +1,4 @@
-package nl.thedutchruben.mccore.runnables;
+package nl.thedutchruben.mccore.spigot.runnables;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

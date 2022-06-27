@@ -1,8 +1,6 @@
-package nl.thedutchruben.mccore.runnables;
+package nl.thedutchruben.mccore.spigot.runnables;
 
 import nl.thedutchruben.mccore.Mccore;
-import nl.thedutchruben.mccore.commands.SubCommand;
-import nl.thedutchruben.mccore.listeners.TDRListener;
 import nl.thedutchruben.mccore.utils.classes.ClassFinder;
 
 public class RunnableRegistry {

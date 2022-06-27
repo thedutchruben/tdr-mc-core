@@ -1,4 +1,4 @@
-package nl.thedutchruben.mccore.commands;
+package nl.thedutchruben.mccore.spigot.commands;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,15 +6,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Command {
-    String command();
-
-    String description() default "";
+@Target(ElementType.METHOD)
+public @interface Default {
 
     String permission() default "";
 
     boolean console() default false;
 
-    String[] aliases() default "";
+    String usage() default "";
+
+    int minParams() default 0;
+
+    int maxParams() default 0;
 }

@@ -1,4 +1,4 @@
-package nl.thedutchruben.mccore.commands;
+package nl.thedutchruben.mccore.spigot.commands;
 
 import java.util.HashMap;
 import java.util.Map;

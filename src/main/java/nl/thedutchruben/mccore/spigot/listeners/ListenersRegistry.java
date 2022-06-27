@@ -1,4 +1,4 @@
-package nl.thedutchruben.mccore.listeners;
+package nl.thedutchruben.mccore.spigot.listeners;
 
 import nl.thedutchruben.mccore.Mccore;
 import nl.thedutchruben.mccore.utils.classes.ClassFinder;

@@ -5,36 +5,29 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.TextComponent;
-import nl.thedutchruben.mccore.commands.CommandRegistry;
+import nl.thedutchruben.mccore.spigot.commands.CommandRegistry;
 import nl.thedutchruben.mccore.config.UpdateCheckerConfig;
-import nl.thedutchruben.mccore.listeners.ListenersRegistry;
-import nl.thedutchruben.mccore.runnables.RunnableRegistry;
-import nl.thedutchruben.mccore.updates.PlayerLoginListener;
+import nl.thedutchruben.mccore.spigot.listeners.ListenersRegistry;
+import nl.thedutchruben.mccore.spigot.runnables.RunnableRegistry;
+import nl.thedutchruben.mccore.spigot.updates.PlayerLoginListener;
 import nl.thedutchruben.mccore.utils.message.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 
 
 public final class Mccore {
@@ -42,37 +35,53 @@ public final class Mccore {
     private static Mccore instance;
     private UpdateCheckerConfig updateCheckerConfig;
     private String tdrId;
+
+    private String projectId;
+    private PluginType type;
     /**
      * Start application
      * @param javaPlugin
      */
-    public Mccore(JavaPlugin javaPlugin,String tdrId) {
+    public Mccore(JavaPlugin javaPlugin,String tdrId,String projectId,PluginType type) {
         this.javaPlugin = javaPlugin;
         this.tdrId = tdrId;
+        this.projectId = projectId;
+        this.type = type;
         instance = this;
-        try {
-            CommandRegistry commandRegistry = new CommandRegistry(this);
 
-            commandRegistry.setFailureHandler((reason, sender, command,subCommand) -> {
-                switch (reason) {
-                    case COMMAND_NOT_FOUND:
-                        sender.sendMessage(ChatColor.RED + "Can't find the command.");
-                        break;
-                    case NO_PERMISSION:
-                        if(subCommand != null){
-                            sender.sendMessage(ChatColor.RED + "You don't have the permission "+ ChatColor.DARK_RED + subCommand.getSubCommand().permission());
-                        }else{
-                            sender.sendMessage(ChatColor.RED + "You don't have the permission "+ ChatColor.DARK_RED + command.getCommand().permission());
+        switch (type){
+            case BUNGEE:
+                break;
+            case SPIGOT:
+                try {
+                    CommandRegistry commandRegistry = new CommandRegistry(this);
+
+                    commandRegistry.setFailureHandler((reason, sender, command,subCommand) -> {
+                        switch (reason) {
+                            case COMMAND_NOT_FOUND:
+                                sender.sendMessage(ChatColor.RED + "Can't find the command.");
+                                break;
+                            case NO_PERMISSION:
+                                if(subCommand != null){
+                                    sender.sendMessage(ChatColor.RED + "You don't have the permission "+ ChatColor.DARK_RED + subCommand.getSubCommand().permission());
+                                }else{
+                                    sender.sendMessage(ChatColor.RED + "You don't have the permission "+ ChatColor.DARK_RED + command.getCommand().permission());
+                                }
+                                break;
+                            case INSUFFICIENT_PARAMETER:
+                                sender.sendMessage(ChatColor.RED + "Wrong usage :"+ ChatColor.DARK_RED + subCommand.getSubCommand().usage());
+                                break;
                         }
-                        break;
-                    case INSUFFICIENT_PARAMETER:
-                        sender.sendMessage(ChatColor.RED + "Wrong usage :"+ ChatColor.DARK_RED + subCommand.getSubCommand().usage());
-                        break;
+                    });
+                } catch (InstantiationException | IllegalAccessException e) {
+                    e.printStackTrace();
                 }
-            });
-        } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
+                new ListenersRegistry(this);
+
+                new RunnableRegistry(this);
+                break;
         }
+
 
 
         CommandRegistry.getTabCompletable().put("player", commandSender -> {
@@ -157,26 +166,35 @@ public final class Mccore {
             return complete;
         });
 
-        new ListenersRegistry(this);
 
-        new RunnableRegistry(this);
     }
 
     public void startUpdateChecker(UpdateCheckerConfig updateCheckerConfig)
     {
+        this.updateCheckerConfig = updateCheckerConfig;
         Bukkit.getScheduler().runTaskTimerAsynchronously(this.javaPlugin, () -> getUpdate(Bukkit.getConsoleSender()),60,updateCheckerConfig.getCheckTime());
         Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(this),javaPlugin);
     }
 
     @SneakyThrows
     public void getUpdate(CommandSender commandSender){
-
-        URL url = new URL("https://api.thedutchruben.nl/api/v1/spigot/plugin/" + this.tdrId + "/version");
+        File bStatsFolder = new File(javaPlugin.getDataFolder().getParentFile(), "bStats");
+        File configFile = new File(bStatsFolder, "config.yml");
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        URL url = new URL("https://api.thedutchruben.nl/api/v1/version/" + this.projectId );
 
         Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
             HttpURLConnection connection = null;
+
             try {
                 connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestProperty("Plugin", this.javaPlugin.getName());
+                connection.setRequestProperty("Plugin-Type", type.name() );
+                connection.setRequestProperty("Plugin-Version", this.javaPlugin.getDescription().getVersion());
+                connection.setRequestProperty("Plugin-Server-Version", this.javaPlugin.getServer().getVersion());
+                connection.setRequestProperty("Plugin-Server-BukkitVersion", this.javaPlugin.getServer().getBukkitVersion());
+                connection.setRequestProperty("Plugin-Server-Id", config.getString("serverUuid"));
+                connection.setRequestProperty("Plugin-Server-Players", String.valueOf(this.javaPlugin.getServer().getOnlinePlayers().size()));
 
                 BufferedReader br = null;
                 if (100 <= connection.getResponseCode() && connection.getResponseCode() <= 399) {
@@ -266,5 +284,10 @@ public final class Mccore {
 
     public UpdateCheckerConfig getUpdateCheckerConfig() {
         return updateCheckerConfig;
+    }
+
+    public enum PluginType{
+        BUNGEE,
+        SPIGOT
     }
 }
