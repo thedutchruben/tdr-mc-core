@@ -48,22 +48,23 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
         if(strings.length != 1){
             TdrCommand wrapper = commandMap.get(command.getName());
             if(wrapper.getSubCommand().get(strings[0]) != null){
-                List<String> list = new LinkedList();
+                List<String> list = new LinkedList<String>();
                 for (String s1 : wrapper.getSubCommand().get(strings[0]).getSubCommand().usage().split(" ")) {
                     list.add(s1.replace("<","").replace(">",""));
                 }
 
                 if(strings.length - 2 <= wrapper.getSubCommand().get(strings[0]).getSubCommand().maxParams()){
-                    System.out.println(list.size());
-                    System.out.println(strings.length);
-                    if(list.get(strings.length - 2) != null){
-                        TabComplete tabComplete = tabCompletable.get(list.get(strings.length - 2));
-                        if(tabComplete != null){
-                            for (String completion : tabComplete.getCompletions(commandSender)) {
-                                COMMANDS.add(completion.replace(" ","_"));
+                    if(!(strings.length > list.size() + 1) ){
+                        if(list.get(strings.length - 2) != null){
+                            TabComplete tabComplete = tabCompletable.get(list.get(strings.length - 2));
+                            if(tabComplete != null){
+                                for (String completion : tabComplete.getCompletions(commandSender)) {
+                                    COMMANDS.add(completion.replace(" ","_"));
+                                }
                             }
                         }
                     }
+
                 }
 
 
