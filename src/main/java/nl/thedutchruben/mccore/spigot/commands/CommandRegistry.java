@@ -66,11 +66,8 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                     }
 
                 }
-
-
-
-
             }
+
             StringUtil.copyPartialMatches(strings[strings.length-1], COMMANDS, completions);
             Collections.sort(completions);
         }
@@ -192,17 +189,17 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                     //create,"test,test",21-02-2022,10:00:00,11:00:00,test
                     String[] actualParams = Arrays.copyOfRange(args, (annotation.getSubCommand().subCommand()).split(" ").length - 1, args.length);
                     List<String> params = new ArrayList<>();
-                    StringBuilder combineString = new StringBuilder();
                     //"testings,123"
                     for (String actualParam : actualParams) {
                         if(actualParam.startsWith("\"") && actualParam.endsWith("\"")) {
                             params.add(actualParam.replaceAll("\"",""));
                         }else if(actualParam.startsWith("\"")){
-                            combineString = new StringBuilder(actualParam.substring(1));
-                        }else if(actualParam.endsWith("\"")){
-                            combineString.append(" ");
-                            combineString.append(actualParam, 0, actualParam.length() - 1);
-                            params.add(combineString.toString());
+                            StringBuilder combineString = new StringBuilder();
+                            while (!actualParam.endsWith("\"")) {
+                                combineString.append(actualParam).append(" ");
+                                actualParam = args[++i];
+                            }
+                            params.add(combineString.toString().replaceAll("\"",""));
                         }else{
                             params.add(actualParam);
                         }
@@ -228,6 +225,26 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
         failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, null,null);
         return false;
     }
+
+
+    //Combine string between quotes from array
+    private String combineString(String[] args){
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < args.length; i++) {
+            if(args[i].startsWith("\"") && args[i].endsWith("\"")){
+                sb.append(args[i].replaceAll("\"",""));
+            }else if(args[i].startsWith("\"")){
+                sb.append(args[i].substring(1));
+            }else if(args[i].endsWith("\"")){
+                sb.append(" ");
+                sb.append(args[i], 0, args[i].length() - 1);
+            }else{
+                sb.append(args[i]);
+            }
+        }
+        return sb.toString();
+    }
+
 
     public static Map<String, TabComplete> getTabCompletable() {
         return tabCompletable;
