@@ -190,18 +190,24 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                     String[] actualParams = Arrays.copyOfRange(args, (annotation.getSubCommand().subCommand()).split(" ").length - 1, args.length);
                     List<String> params = new ArrayList<>();
                     //"testings,123"
+                    StringBuilder combine = new StringBuilder();
+                    boolean combineNext = false;
                     for (String actualParam : actualParams) {
                         if(actualParam.startsWith("\"") && actualParam.endsWith("\"")) {
                             params.add(actualParam.replaceAll("\"",""));
                         }else if(actualParam.startsWith("\"")){
-                            StringBuilder combineString = new StringBuilder();
-                            while (!actualParam.endsWith("\"")) {
-                                combineString.append(actualParam).append(" ");
-                                actualParam = args[++i];
-                            }
-                            params.add(combineString.toString().replaceAll("\"",""));
+                            combineNext = true;
+                            combine.append(actualParam);
+                        }else if(actualParam.endsWith("\"")){
+                            combineNext = false;
+                            combine.append(" ").append(actualParam);
+                            params.add(combine.toString().replaceAll("\"",""));
                         }else{
-                            params.add(actualParam);
+                            if(combineNext){
+                                combine.append(" ").append(actualParam);
+                            }else{
+                                params.add(actualParam);
+                            }
                         }
                     }
 
