@@ -1,7 +1,6 @@
 package nl.thedutchruben.mccore.utils.item;
 
 import com.google.gson.Gson;
-import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -58,7 +57,7 @@ public class ItemBuilder {
     /** Initalizes the ItemBuilder with {@link org.bukkit.Material}, Amount and Displayname */
     public ItemBuilder(Material material, int amount, String displayname) {
         if(material == null) material = Material.AIR;
-        Validate.notNull(displayname, "The Displayname is null.");
+        //Validate.notNull(displayname, "The Displayname is null.");
         this.item = new ItemStack(material, amount);
         this.material = material;
         if(((amount > material.getMaxStackSize()) || (amount <= 0)) && (!unsafeStackSize)) amount = 1;
@@ -69,7 +68,7 @@ public class ItemBuilder {
     /** Initalizes the ItemBuilder with {@link org.bukkit.Material} and Displayname */
     public ItemBuilder(Material material, String displayname) {
         if(material == null) material = Material.AIR;
-        Validate.notNull(displayname, "The Displayname is null.");
+        //Validate.notNull(displayname, "The Displayname is null.");
         this.item = new ItemStack(material);
         this.material = material;
         this.displayname = displayname;
@@ -77,7 +76,7 @@ public class ItemBuilder {
 
     /** Initalizes the ItemBuilder with a {@link org.bukkit.inventory.ItemStack} */
     public ItemBuilder(ItemStack item) {
-        Validate.notNull(item, "The Item is null.");
+        //Validate.notNull(item, "The Item is null.");
         this.item = item;
         if(item.hasItemMeta())
             this.meta = item.getItemMeta();
@@ -107,7 +106,7 @@ public class ItemBuilder {
      */
     @Deprecated
     public ItemBuilder(ItemBuilder builder) {
-        Validate.notNull(builder, "The ItemBuilder is null.");
+        //Validate.notNull(builder, "The ItemBuilder is null.");
         this.item = builder.item;
         this.meta = builder.meta;
         this.material = builder.material;
@@ -136,7 +135,7 @@ public class ItemBuilder {
      * @param data MaterialData for the ItemStack
      */
     public ItemBuilder data(MaterialData data) {
-        Validate.notNull(data, "The Data is null.");
+        //Validate.notNull(data, "The Data is null.");
         this.data = data;
         return this;
     }
@@ -166,7 +165,7 @@ public class ItemBuilder {
      * @param material Material for the ItemStack
      */
     public ItemBuilder material(Material material) {
-        Validate.notNull(material, "The Material is null.");
+        //Validate.notNull(material, "The Material is null.");
         this.material = material;
         return this;
     }
@@ -176,7 +175,7 @@ public class ItemBuilder {
      * @param meta Meta for the ItemStack
      */
     public ItemBuilder meta(ItemMeta meta) {
-        Validate.notNull(meta, "The Meta is null.");
+        //Validate.notNull(meta, "The Meta is null.");
         this.meta = meta;
         return this;
     }
@@ -187,7 +186,7 @@ public class ItemBuilder {
      * @param level Level of the Enchantment
      */
     public ItemBuilder enchant(Enchantment enchant, int level) {
-        Validate.notNull(enchant, "The Enchantment is null.");
+        //Validate.notNull(enchant, "The Enchantment is null.");
         enchantments.put(enchant, level);
         return this;
     }
@@ -197,7 +196,7 @@ public class ItemBuilder {
      * @param enchantments Map containing Enchantment and Level for the ItemStack
      */
     public ItemBuilder enchant(Map<Enchantment, Integer> enchantments) {
-        Validate.notNull(enchantments, "The Enchantments are null.");
+        //Validate.notNull(enchantments, "The Enchantments are null.");
         this.enchantments = enchantments;
         return this;
     }
@@ -207,7 +206,7 @@ public class ItemBuilder {
      * @param displayname Displayname for the ItemStack
      */
     public ItemBuilder displayname(String displayname) {
-        Validate.notNull(displayname, "The Displayname is null.");
+        //Validate.notNull(displayname, "The Displayname is null.");
         this.displayname = andSymbol ? ChatColor.translateAlternateColorCodes('&', displayname) : displayname;
         return this;
     }
@@ -217,7 +216,7 @@ public class ItemBuilder {
      * @param line Line of the Lore for the ItemStack
      */
     public ItemBuilder lore(String line) {
-        Validate.notNull(line, "The Line is null.");
+        //Validate.notNull(line, "The Line is null.");
         lore.add(andSymbol ? ChatColor.translateAlternateColorCodes('&', line) : line);
         return this;
     }
@@ -227,7 +226,7 @@ public class ItemBuilder {
      * @param lore List containing String as Lines for the ItemStack Lore
      */
     public ItemBuilder lore(List<String> lore) {
-        Validate.notNull(lore, "The Lores are null.");
+        //Validate.notNull(lore, "The Lores are null.");
         this.lore = lore;
         return this;
     }
@@ -239,7 +238,7 @@ public class ItemBuilder {
      */
     @Deprecated
     public ItemBuilder lores(String... lines) {
-        Validate.notNull(lines, "The Lines are null.");
+        //Validate.notNull(lines, "The Lines are null.");
         for (String line : lines) {
             lore(andSymbol ? ChatColor.translateAlternateColorCodes('&', line) : line);
         }
@@ -251,7 +250,7 @@ public class ItemBuilder {
      * @param lines One or more Strings for the ItemStack Lore
      */
     public ItemBuilder lore(String... lines) {
-        Validate.notNull(lines, "The Lines are null.");
+        //Validate.notNull(lines, "The Lines are null.");
         for (String line : lines) {
             lore(andSymbol ? ChatColor.translateAlternateColorCodes('&', line) : line);
         }
@@ -264,7 +263,7 @@ public class ItemBuilder {
      * @param index Position in the Lore for the ItemStack
      */
     public ItemBuilder lore(String line, int index) {
-        Validate.notNull(line, "The Line is null.");
+        //Validate.notNull(line, "The Line is null.");
         lore.set(index, andSymbol ? ChatColor.translateAlternateColorCodes('&', line) : line);
         return this;
     }
@@ -274,7 +273,7 @@ public class ItemBuilder {
      * @param flag ItemFlag for the ItemStack
      */
     public ItemBuilder flag(ItemFlag flag) {
-        Validate.notNull(flag, "The Flag is null.");
+        //Validate.notNull(flag, "The Flag is null.");
         flags.add(flag);
         return this;
     }
@@ -284,7 +283,7 @@ public class ItemBuilder {
      * @param flags List containing all ItemFlags
      */
     public ItemBuilder flag(List<ItemFlag> flags) {
-        Validate.notNull(flags, "The Flags are null.");
+        //Validate.notNull(flags, "The Flags are null.");
         this.flags = flags;
         return this;
     }
@@ -312,7 +311,7 @@ public class ItemBuilder {
      */
     @Deprecated
     public ItemBuilder owner(String user) {
-        Validate.notNull(user, "The Username is null.");
+        //Validate.notNull(user, "The Username is null.");
         if((material == Material.PLAYER_HEAD)) {
             SkullMeta smeta = (SkullMeta) meta;
             smeta.setOwner(user);
