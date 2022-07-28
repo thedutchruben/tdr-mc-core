@@ -233,24 +233,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
     }
 
 
-    //Combine string between quotes from array
-    private String combineString(String[] args){
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < args.length; i++) {
-            if(args[i].startsWith("\"") && args[i].endsWith("\"")){
-                sb.append(args[i].replaceAll("\"",""));
-            }else if(args[i].startsWith("\"")){
-                sb.append(args[i].substring(1));
-            }else if(args[i].endsWith("\"")){
-                sb.append(" ");
-                sb.append(args[i], 0, args[i].length() - 1);
-            }else{
-                sb.append(args[i]);
-            }
-        }
-        return sb.toString();
-    }
-
 
     public static Map<String, TabComplete> getTabCompletable() {
         return tabCompletable;
