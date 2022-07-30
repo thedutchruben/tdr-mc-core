@@ -54,7 +54,7 @@ public class FileManager {
     public class Config {
 
         private final String name;
-        private File file;
+        public File file;
         private YamlConfiguration config;
 
         public Config(String name) {
