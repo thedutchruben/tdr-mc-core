@@ -54,6 +54,6 @@ jobs:
           webhook_id: ${{ secrets.WEBHOOK_ID }}
           webhook_token: ${{ secrets.WEBHOOK_TOKEN }}
           file: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
-          message: "New Playtime build: ${{ steps.project.outputs.version }}"
+          message: "New McCore Release: ${{ steps.project.outputs.version }}"
           color: "#48f442"
-          username: "TdrPlaytime Release"
+          username: "McCore Release"
