@@ -197,6 +197,9 @@ public final class Mccore {
                 connection.setRequestProperty("Plugin-Server-Players", String.valueOf(this.javaPlugin.getServer().getOnlinePlayers().size()));
 
                 BufferedReader br = null;
+                if(connection.getResponseCode() != 200){
+                    return;
+                }
                 if (100 <= connection.getResponseCode() && connection.getResponseCode() <= 399) {
                     br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 } else {

@@ -28,11 +28,19 @@ jobs:
         run: echo ::set-output name=version::$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
         id: project
 
-      - name: Show extracted Maven project version
-        run: echo ${{ steps.project.outputs.version }}
-
       - name: Upload Plugin jar
         uses: actions/upload-artifact@v3
         with:
           name: Plugin-${{ env.snapshotVersion }}-${{ env.git_hash }}.jar
           path: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
+
+      - name: send message
+        uses: appleboy/discord-action@master
+        with:
+          webhook_id: ${{ secrets.WEBHOOK_ID }}
+          webhook_token: ${{ secrets.WEBHOOK_TOKEN }}
+          file: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
+          message: "New McCore build: ${{ steps.project.outputs.version }}"
+          color: "#48f442"
+          username: "McCore Builds"
+
