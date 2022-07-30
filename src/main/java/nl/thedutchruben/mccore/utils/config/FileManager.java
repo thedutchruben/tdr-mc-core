@@ -61,6 +61,11 @@ public class FileManager {
             this.name = name;
         }
 
+
+        public File getFile() {
+            return file;
+        }
+
         /**
          * Saves the config as long as the config isn't empty
          *
