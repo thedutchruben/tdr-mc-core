@@ -40,7 +40,7 @@ jobs:
           webhook_id: ${{ secrets.WEBHOOK_ID }}
           webhook_token: ${{ secrets.WEBHOOK_TOKEN }}
           file: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
-          message: "New McCore build: ${{ steps.project.outputs.version }} - ${{ env.git_hash }}\n${{ github.event.head_commit.branch }}\n${{ github.event.head_commit.message }}"
+          message: "New McCore build: ${{ steps.project.outputs.version }} - ${{ env.git_hash }}\n${{ steps.extract_branch.outputs.branch  }}\n${{ github.event.head_commit.message }}"
           color: "#48f442"
           username: "McCore Builds"
 
