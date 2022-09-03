@@ -48,6 +48,17 @@ jobs:
           name: mccore-${{ env.snapshotVersion }}-${{ env.git_hash }}.jar
           path: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
 
+      - name: Nexus Repo Publish
+        uses: sonatype-nexus-community/nexus-repo-github-action@master
+        with:
+          serverUrl: https://repo.thedutchruben.nl/
+          username: admin
+          password: ${{ secrets.SONAR_TOKEN }}
+          format: maven2
+          repository: maven-releases
+          coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}
+          assets: extension=jar
+          filename: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
       - name: send message
         uses: appleboy/discord-action@master
         with:

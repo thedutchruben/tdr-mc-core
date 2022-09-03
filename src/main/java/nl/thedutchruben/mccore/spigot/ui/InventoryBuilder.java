@@ -10,7 +10,7 @@ public class InventoryBuilder {
     private InventoryType inventoryType;
 
     private InventoryHolder inventoryHolder;
-    
+
 
     public InventoryBuilder(String title) {
         this.title = title;
@@ -26,6 +26,16 @@ public class InventoryBuilder {
         return this;
     }
 
+    public InventoryBuilder multiple(int size){
+        inventoryType = InventoryType.CHEST;
+        inventoryHolder = new InventoryHolder() {
+            @Override
+            public Inventory getInventory() {
+                return Bukkit.createInventory(null, size);
+            }
+        };
+        return this;
+    }
 
 
     public Inventory build(){
