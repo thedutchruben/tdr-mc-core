@@ -1,6 +1,6 @@
 name: Discord Notification
 
-on: [push]
+on: [push,pull_request,fork]
 
 jobs:
   report-status:
