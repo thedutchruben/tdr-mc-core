@@ -1,8 +1,6 @@
 package nl.thedutchruben.mccore;
 
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import nl.thedutchruben.mccore.spigot.commands.CommandRegistry;
@@ -26,8 +24,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public final class Mccore {
@@ -189,7 +192,7 @@ public final class Mccore {
             try {
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestProperty("Plugin", this.javaPlugin.getName());
-                connection.setRequestProperty("Plugin-Type", type.name() );
+                connection.setRequestProperty("Plugin-Type", type.name());
                 connection.setRequestProperty("Plugin-Version", this.javaPlugin.getDescription().getVersion());
                 connection.setRequestProperty("Plugin-Server-Version", this.javaPlugin.getServer().getVersion());
                 connection.setRequestProperty("Plugin-Server-BukkitVersion", this.javaPlugin.getServer().getBukkitVersion());
@@ -197,7 +200,7 @@ public final class Mccore {
                 connection.setRequestProperty("Plugin-Server-Players", String.valueOf(this.javaPlugin.getServer().getOnlinePlayers().size()));
 
                 BufferedReader br = null;
-                if(connection.getResponseCode() != 200){
+                if (connection.getResponseCode() != 200) {
                     return;
                 }
                 if (100 <= connection.getResponseCode() && connection.getResponseCode() <= 399) {
@@ -206,25 +209,55 @@ public final class Mccore {
                     br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
                 }
                 String data = br.readLine();
-                JsonObject jsonObject = JsonParser.parseString(data).getAsJsonObject();
-            String pluginVersion = javaPlugin.getDescription().getVersion();
-            int diff = versionCompare(jsonObject.get("version").getAsString(),pluginVersion);
+                final Pattern pattern = Pattern.compile("\\d{1,2}\\.\\d{1,2}\\.\\d{1,3}", Pattern.MULTILINE);
+                final Matcher matcher = pattern.matcher(data);
+                matcher.find();
+
+                String pluginVersion = javaPlugin.getDescription().getVersion();
+                int diff = versionCompare(matcher.group(0), pluginVersion);
+                Map<String, String> map = new HashMap<>();
+                for (String keyValue: data.split(",")) {
+                    String[] split = keyValue.split(":");
+                    if(split.length == 3){
+                        map.put(split[0], split[1] + split[2]);
+                    }
+                }
+                AtomicReference<String> download = new AtomicReference<>("");
+                AtomicReference<String> donate = new AtomicReference<>("");
+                AtomicReference<String> changelog = new AtomicReference<>("");
+
+                map.forEach((s, s2) -> {
+                    if(s.contains("download")){
+                        download.set(s2.replaceAll("\"", "").replaceAll("}", ""));
+                    }
+                    if(s.contains("donate")){
+                        donate.set(s2.replaceAll("\"", "").replaceAll("}", ""));
+                    }
+                    if(s.contains("changeLog")){
+                        changelog.set(s2.replaceAll("\"", "").replaceAll("}", ""));
+                    }
+                });
+
+
+
+
+
              if(diff > 0){
                  commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7There is a plugin update of &9"+javaPlugin.getDescription().getName()+"&7 available."));
                  if(commandSender instanceof Player){
                      commandSender.spigot().sendMessage(new ComponentBuilder()
-                             .append(MessageUtil.getUrlMessage("&9&lDownload",jsonObject.get("downloadUrl").getAsString(),"Download newest version"))
+                             .append(MessageUtil.getUrlMessage("&9&lDownload",download.get(),"Download newest version"))
                              .append(ChatColor.translateAlternateColorCodes('&'," &7 | "))
-                             .append(MessageUtil.getUrlMessage("&9&lDonate",jsonObject.get("donateUrl").getAsString(),"Donate a coffee"))
+                             .append(MessageUtil.getUrlMessage("&9&lDonate",donate.get(),"Donate a coffee"))
                              .append(ChatColor.translateAlternateColorCodes('&'," &7 | "))
-                             .append(MessageUtil.getUrlMessage("&9&lChangelog",jsonObject.get("changeLog").getAsString(),"See what is changed")).create());
+                             .append(MessageUtil.getUrlMessage("&9&lChangelog",changelog.get(),"See what is changed")).create());
                  }else{
-                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lDownload: &r&7" + jsonObject.get("downloadUrl").getAsString()));
-                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lDonate: &r&7"+ jsonObject.get("donateUrl").getAsString()));
-                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lChangelog: &r&7" + jsonObject.get("changeLog").getAsString()));
+                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lDownload:&r&7 " + download.get()));
+                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lDonate:&r&7 "+ donate.get()));
+                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lChangelog:&r&7 " + changelog.get()));
                  }
                  commandSender.sendMessage(" ");
-                 commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&8Lastest version: &a"+jsonObject.get("version").getAsString()+"&8 | Your version: &c" + pluginVersion));
+                 commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&8Lastest version: &a"+matcher.group(0)+"&8 | Your version: &c" + pluginVersion));
 
              }
             } catch (IOException e) {
