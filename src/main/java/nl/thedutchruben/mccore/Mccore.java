@@ -209,6 +209,7 @@ public final class Mccore {
                     br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
                 }
                 String data = br.readLine();
+//                System.out.println(data);
                 final Pattern pattern = Pattern.compile("\\d{1,2}\\.\\d{1,2}\\.\\d{1,3}", Pattern.MULTILINE);
                 final Matcher matcher = pattern.matcher(data);
                 matcher.find();
