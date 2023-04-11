@@ -16,11 +16,11 @@ public class Hologram {
         this.text = text;
     }
 
-    public static List<Hologram> createHolograms(Location location, List<String> text,double space) {
+    public static List<Hologram> createHolograms(Location location, List<String> text, double space) {
         List<Hologram> holograms = new java.util.ArrayList<>();
         int i = 0;
         for (String s : text) {
-            holograms.add(new Hologram(location.clone().add(0,-(space*i),0), s));
+            holograms.add(new Hologram(location.clone().add(0, -(space * i), 0), s));
             i++;
         }
 
