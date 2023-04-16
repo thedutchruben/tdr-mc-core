@@ -84,7 +84,7 @@ jobs:
           repository: maven-releases
           coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}-${{ steps.branch-name.outputs.current_branch }}
           assets: extension=jar
-          filename: ./mccore-${{ steps.project.outputs.version }}.jar
+          filename: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
       - name: send message
         uses: appleboy/discord-action@master
         with:
