@@ -13,12 +13,30 @@ public class CachingManager {
 
     /**
      * Get the caching object based of the key
-     * 
+     *
      * @param key
      * @return
      */
     public CachingObject getCachingObject(String key) {
         return cachingMap.get(key);
+    }
+
+    /**
+     * Add caching object
+     *
+     * @param key
+     * @param object
+     */
+    public void addCachingObject(String key, CachingObject object) {
+        if (cachingMap.get(key) != null) {
+            if (cachingMap.get(key).isValid()) {
+                return;
+            }
+        }
+        cachingMap.put(key, object);
+        if (object.isPersistent()) {
+            object.saveToDisk();
+        }
     }
 
 }
