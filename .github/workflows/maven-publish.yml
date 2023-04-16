@@ -71,7 +71,7 @@ jobs:
           repository: maven-releases
           coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}
           assets: extension=jar
-          filename: ./mccore-${{ steps.project.outputs.version }}.jar
+          filename: ./target/mccore-${{ steps.project.outputs.version }}.jar
 
       - name: Nexus Repo Publish not master
         uses: sonatype-nexus-community/nexus-repo-github-action@master
@@ -84,7 +84,7 @@ jobs:
           repository: maven-releases
           coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}-${{ steps.branch-name.outputs.current_branch }}
           assets: extension=jar
-          filename: ./mccore-${{ steps.project.outputs.version }}.jar
+          filename: ./target/mccore-${{ steps.project.outputs.version }}.jar
       - name: send message
         uses: appleboy/discord-action@master
         with:
