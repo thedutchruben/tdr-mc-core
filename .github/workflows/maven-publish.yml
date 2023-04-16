@@ -4,6 +4,8 @@
 name: Maven Package
 
 on:
+  workflow_run:
+  pull_request:
   release:
     types: [ created ]
 
@@ -42,14 +44,23 @@ jobs:
         run: echo ::set-output name=version::$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
         id: project
 
-      - name: Upload Plugin jar
+      - name: Upload Plugin jar if master
+        if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v3
         with:
           name: mccore-${{ env.snapshotVersion }}-${{ env.git_hash }}.jar
           path: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
 
-      - name: Nexus Repo Publish
+      - name: Upload Plugin jar if not master
+        if: github.ref != 'refs/heads/master'
+        uses: actions/upload-artifact@v3
+        with:
+          name: mccore-${{ env.snapshotVersion }}-${{ steps.extract_branch.outputs.branch }}-${{ env.git_hash }}.jar
+          path: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
+
+      - name: Nexus Repo Publish master
         uses: sonatype-nexus-community/nexus-repo-github-action@master
+        if: github.ref == 'refs/heads/master'
         with:
           serverUrl: https://repo.thedutchruben.nl/
           username: admin
@@ -57,6 +68,19 @@ jobs:
           format: maven2
           repository: maven-releases
           coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}
+          assets: extension=jar
+          filename: ./mccore-${{ steps.project.outputs.version }}.jar
+
+      - name: Nexus Repo Publish not master
+        uses: sonatype-nexus-community/nexus-repo-github-action@master
+        if: github.ref != 'refs/heads/master'
+        with:
+          serverUrl: https://repo.thedutchruben.nl/
+          username: admin
+          password: ${{ secrets.SONAR_TOKEN }}
+          format: maven2
+          repository: maven-releases
+          coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}-${{ steps.extract_branch.outputs.branch }}
           assets: extension=jar
           filename: ./mccore-${{ steps.project.outputs.version }}.jar
       - name: send message
