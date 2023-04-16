@@ -58,7 +58,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: mccore-${{ env.snapshotVersion }}-${{ steps.branch-name.outputs.current_branch }}-${{ env.git_hash }}.jar
-          path: ${{ env.artifactPath }}/mccore-${{ env.snapshotVersion }}-${{ steps.branch-name.outputs.current_branch }}-${{ env.git_hash }}.jar
+          path: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
 
       - name: Nexus Repo Publish master
         uses: sonatype-nexus-community/nexus-repo-github-action@master
@@ -84,7 +84,7 @@ jobs:
           repository: maven-releases
           coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}-${{ steps.branch-name.outputs.current_branch }}
           assets: extension=jar
-          filename: ./mccore-${{ env.snapshotVersion }}-${{ steps.branch-name.outputs.current_branch }}-${{ env.git_hash }}.jar
+          filename: ./mccore-${{ steps.project.outputs.version }}.jar
       - name: send message
         uses: appleboy/discord-action@master
         with:
