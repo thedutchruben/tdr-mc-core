@@ -3,11 +3,14 @@ package nl.thedutchruben.mccore.global.caching;
 import java.util.HashMap;
 import java.util.Map;
 import nl.thedutchruben.mccore.global.caching.CachingObject;
+import nl.thedutchruben.mccore.global.caching.fileSystemTypes.JsonFileType;
 
 public class CachingManager {
     private Map<String, CachingObject> cachingMap = new HashMap<>();
+    private CachingFileSystem cachingFileSystem;
 
     public CachingManager() {
+        this.cachingFileSystem = new JsonFileType();
         // TODO: Load from storage
     }
 
@@ -37,6 +40,10 @@ public class CachingManager {
         if (object.isPersistent()) {
             object.saveToDisk();
         }
+    }
+
+    public CachingFileSystem getCachingFileSystem() {
+        return cachingFileSystem;
     }
 
 }

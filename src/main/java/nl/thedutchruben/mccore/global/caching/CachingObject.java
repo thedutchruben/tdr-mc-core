@@ -2,6 +2,8 @@ package nl.thedutchruben.mccore.global.caching;
 
 import java.util.Date;
 
+import nl.thedutchruben.mccore.Mccore;
+
 public abstract class CachingObject {
 
     /**
@@ -51,7 +53,7 @@ public abstract class CachingObject {
     }
 
     public void saveToDisk() {
-        // TODO: Save the data to the disk
+        Mccore.getInstance().getCachingManager().getCachingFileSystem().saveToFileSystem(getKey(), this);
     }
 
 }

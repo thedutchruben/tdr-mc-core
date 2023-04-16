@@ -1,5 +1,7 @@
 package nl.thedutchruben.mccore.global.caching;
 
+import java.util.List;
+
 import nl.thedutchruben.mccore.global.caching.CachingObject;
 
 /**
@@ -15,4 +17,7 @@ public abstract class CachingFileSystem {
      */
     public abstract void saveToFileSystem(String key, CachingObject cachingObject);
 
+    public abstract void removeFromFileSystem(CachingObject cachingObject);
+
+    public abstract List<CachingObject> getAllFromFileSystem();
 }
