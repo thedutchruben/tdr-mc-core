@@ -26,6 +26,13 @@ public abstract class CachingObject {
     public abstract Date getCreateDate();
 
     /**
+     * Returns the expire date
+     * 
+     * @return
+     */
+    public abstract Date getExpireDate();
+
+    /**
      * Returns the data that was saved
      * 
      * @return
@@ -33,7 +40,13 @@ public abstract class CachingObject {
     public abstract Object getData();
 
     public boolean isValid() {
-        // TODO: Check if the object is still valid
+        if (new Date().after(getExpireDate())) {
+            if (isValid()) {
+                // todo remove file from server
+            }
+            return false;
+        }
+
         return true;
     }
 
