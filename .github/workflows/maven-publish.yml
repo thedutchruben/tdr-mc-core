@@ -73,6 +73,8 @@ jobs:
           assets: extension=jar
           filename: ./mccore-${{ steps.project.outputs.version }}.jar
 
+      - name: Looking for files
+        run: ls ${{ env.artifactPath }} -l
       - name: Nexus Repo Publish not master
         uses: sonatype-nexus-community/nexus-repo-github-action@master
         if: github.ref != 'refs/heads/master'
