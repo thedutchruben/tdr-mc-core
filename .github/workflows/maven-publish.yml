@@ -27,7 +27,9 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '17'
-
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v6
 
       - if: github.event.release
         name: Update version in pom.xml (Release only)
@@ -55,8 +57,8 @@ jobs:
         if: github.ref != 'refs/heads/master'
         uses: actions/upload-artifact@v3
         with:
-          name: mccore-${{ env.snapshotVersion }}-${{ steps.extract_branch.outputs.branch }}-${{ env.git_hash }}.jar
-          path: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
+          name: mccore-${{ env.snapshotVersion }}-${{ steps.branch-name.outputs.current_branch }}-${{ env.git_hash }}.jar
+          path: ${{ env.artifactPath }}/mccore-${{ env.snapshotVersion }}-${{ steps.branch-name.outputs.current_branch }}-${{ env.git_hash }}.jar
 
       - name: Nexus Repo Publish master
         uses: sonatype-nexus-community/nexus-repo-github-action@master
@@ -80,9 +82,9 @@ jobs:
           password: ${{ secrets.SONAR_TOKEN }}
           format: maven2
           repository: maven-releases
-          coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}-${{ steps.extract_branch.outputs.branch }}
+          coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}-${{ steps.branch-name.outputs.current_branch }}
           assets: extension=jar
-          filename: ./mccore-${{ env.snapshotVersion }}-${{ steps.extract_branch.outputs.branch }}-${{ env.git_hash }}.jar
+          filename: ./mccore-${{ env.snapshotVersion }}-${{ steps.branch-name.outputs.current_branch }}-${{ env.git_hash }}.jar
       - name: send message
         uses: appleboy/discord-action@master
         with:
