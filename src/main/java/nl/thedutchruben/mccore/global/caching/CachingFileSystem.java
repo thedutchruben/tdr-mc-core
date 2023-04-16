@@ -1,6 +1,7 @@
 package nl.thedutchruben.mccore.global.caching;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import nl.thedutchruben.mccore.global.caching.CachingObject;
 
@@ -15,9 +16,19 @@ public abstract class CachingFileSystem {
      * @param key
      * @param cachingObject
      */
-    public abstract void saveToFileSystem(String key, CachingObject cachingObject);
+    public abstract CompletableFuture<Void> saveToFileSystem(String key, CachingObject cachingObject);
 
-    public abstract void removeFromFileSystem(CachingObject cachingObject);
+    /**
+     * Remove the object from the file system
+     * 
+     * @param cachingObject
+     */
+    public abstract CompletableFuture<Void> removeFromFileSystem(CachingObject cachingObject);
 
-    public abstract List<CachingObject> getAllFromFileSystem();
+    /**
+     * Returns a list with saved caching object
+     * 
+     * @return
+     */
+    public abstract CompletableFuture<List<CachingObject>> getAllFromFileSystem();
 }

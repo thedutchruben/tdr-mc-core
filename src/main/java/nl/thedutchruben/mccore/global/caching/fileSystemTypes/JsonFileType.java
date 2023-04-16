@@ -1,6 +1,8 @@
 package nl.thedutchruben.mccore.global.caching.fileSystemTypes;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import com.google.gson.Gson;
 
@@ -10,21 +12,25 @@ import nl.thedutchruben.mccore.global.caching.CachingObject;
 public class JsonFileType extends CachingFileSystem {
 
     @Override
-    public void saveToFileSystem(String key, CachingObject cachingObject) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'saveToFileSystem'");
+    public CompletableFuture<Void> saveToFileSystem(String key, CachingObject cachingObject) {
+        return CompletableFuture.supplyAsync(() -> {
+            return null;
+        });
     }
 
     @Override
-    public void removeFromFileSystem(CachingObject cachingObject) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeFromFileSystem'");
+    public CompletableFuture<Void> removeFromFileSystem(CachingObject cachingObject) {
+        return CompletableFuture.supplyAsync(() -> {
+            return null;
+        });
     }
 
     @Override
-    public List<CachingObject> getAllFromFileSystem() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllFromFileSystem'");
+    public CompletableFuture<List<CachingObject>> getAllFromFileSystem() {
+        return CompletableFuture.supplyAsync(() -> {
+            List<CachingObject> list = new ArrayList<>();
+            return list;
+        });
     }
 
 }

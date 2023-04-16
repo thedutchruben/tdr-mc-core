@@ -11,7 +11,12 @@ public class CachingManager {
 
     public CachingManager() {
         this.cachingFileSystem = new JsonFileType();
-        // TODO: Load from storage
+        this.cachingFileSystem.getAllFromFileSystem().whenCompleteAsync((aList, throwable) -> {
+            aList.forEach(data -> {
+                cachingMap.put(data.getKey(), data);
+            });
+        });
+
     }
 
     /**
@@ -21,7 +26,11 @@ public class CachingManager {
      * @return
      */
     public CachingObject getCachingObject(String key) {
-        return cachingMap.get(key);
+        CachingObject object = cachingMap.get(key);
+        if (object.isValid()) {
+            return object;
+        }
+        return null;
     }
 
     /**

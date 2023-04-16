@@ -43,15 +43,16 @@ public abstract class CachingObject {
 
     public boolean isValid() {
         if (new Date().after(getExpireDate())) {
-            if (isValid()) {
-                // todo remove file from server
-            }
+            Mccore.getInstance().getCachingManager().getCachingFileSystem().removeFromFileSystem(this);
             return false;
         }
 
         return true;
     }
 
+    /**
+     * Save the object
+     */
     public void saveToDisk() {
         Mccore.getInstance().getCachingManager().getCachingFileSystem().saveToFileSystem(getKey(), this);
     }
