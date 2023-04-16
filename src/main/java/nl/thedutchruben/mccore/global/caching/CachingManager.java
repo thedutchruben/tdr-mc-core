@@ -2,6 +2,7 @@ package nl.thedutchruben.mccore.global.caching;
 
 import java.util.HashMap;
 import java.util.Map;
+import nl.thedutchruben.mccore.global.caching.CachingObject;
 
 public class CachingManager {
     private Map<String, CachingObject> cachingMap = new HashMap<>();
