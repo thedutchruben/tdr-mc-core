@@ -91,6 +91,10 @@ public final class Mccore {
                 break;
         }
 
+        registerCompleters();
+    }
+
+    public void registerCompleters() {
         CommandRegistry.getTabCompletable().put("player", commandSender -> {
             Set<String> complete = new HashSet<>();
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
@@ -172,7 +176,6 @@ public final class Mccore {
             }
             return complete;
         });
-
     }
 
     public CachingManager getCachingManager() {
@@ -195,7 +198,6 @@ public final class Mccore {
 
         Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
             HttpURLConnection connection = null;
-
             try {
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestProperty("Plugin", this.javaPlugin.getName());
@@ -208,115 +210,100 @@ public final class Mccore {
                 connection.setRequestProperty("Plugin-Server-Players",
                         String.valueOf(this.javaPlugin.getServer().getOnlinePlayers().size()));
 
-                BufferedReader br = null;
-                if (connection.getResponseCode() != 200) {
-                    return;
-                }
-                if (100 <= connection.getResponseCode() && connection.getResponseCode() <= 399) {
-                    br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                } else {
-                    br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                }
-                String data = br.readLine();
-                // System.out.println(data);
-                final Pattern pattern = Pattern.compile("\\d{1,2}\\.\\d{1,2}\\.\\d{1,3}", Pattern.MULTILINE);
-                final Matcher matcher = pattern.matcher(data);
-                matcher.find();
+                try (BufferedReader br = (connection.getResponseCode() == 200)
+                        ? new BufferedReader(new InputStreamReader(connection.getInputStream()))
+                        : new BufferedReader(new InputStreamReader(connection.getErrorStream()))) {
 
-                String pluginVersion = javaPlugin.getDescription().getVersion();
-                int diff = versionCompare(matcher.group(0), pluginVersion);
-                Map<String, String> map = new HashMap<>();
-                for (String keyValue : data.split(",")) {
-                    String[] split = keyValue.split(":");
-                    if (split.length == 3) {
-                        map.put(split[0], split[1] + split[2]);
-                    }
-                }
-                AtomicReference<String> download = new AtomicReference<>("");
-                AtomicReference<String> donate = new AtomicReference<>("");
-                AtomicReference<String> changelog = new AtomicReference<>("");
+                    String data = br.readLine();
+                    Matcher matcher = Pattern.compile("\\d{1,2}\\.\\d{1,2}\\.\\d{1,3}", Pattern.MULTILINE)
+                            .matcher(data);
+                    matcher.find();
+                    int diff = versionCompare(matcher.group(0), javaPlugin.getDescription().getVersion());
 
-                map.forEach((s, s2) -> {
-                    if (s.contains("download")) {
-                        download.set(s2.replaceAll("\"", "").replaceAll("}", ""));
-                    }
-                    if (s.contains("donate")) {
-                        donate.set(s2.replaceAll("\"", "").replaceAll("}", ""));
-                    }
-                    if (s.contains("changeLog")) {
-                        changelog.set(s2.replaceAll("\"", "").replaceAll("}", ""));
-                    }
-                });
+                    Map<String, AtomicReference<String>> map = new HashMap<>();
+                    map.put("download", new AtomicReference<>(""));
+                    map.put("donate", new AtomicReference<>(""));
+                    map.put("changelog", new AtomicReference<>(""));
 
-                if (diff > 0) {
-                    commandSender
-                            .sendMessage(ChatColor.translateAlternateColorCodes('&', "&7There is a plugin update of &9"
-                                    + javaPlugin.getDescription().getName() + "&7 available."));
-                    if (commandSender instanceof Player) {
-                        commandSender.spigot().sendMessage(new ComponentBuilder()
-                                .append(MessageUtil.getUrlMessage("&9&lDownload", download.get(),
-                                        "Download newest version"))
-                                .append(ChatColor.translateAlternateColorCodes('&', " &7 | "))
-                                .append(MessageUtil.getUrlMessage("&9&lDonate", donate.get(), "Donate a coffee"))
-                                .append(ChatColor.translateAlternateColorCodes('&', " &7 | "))
-                                .append(MessageUtil.getUrlMessage("&9&lChangelog", changelog.get(),
-                                        "See what is changed"))
-                                .create());
-                    } else {
-                        commandSender.sendMessage(
-                                ChatColor.translateAlternateColorCodes('&', "&9&lDownload:&r&7 " + download.get()));
-                        commandSender.sendMessage(
-                                ChatColor.translateAlternateColorCodes('&', "&9&lDonate:&r&7 " + donate.get()));
-                        commandSender.sendMessage(
-                                ChatColor.translateAlternateColorCodes('&', "&9&lChangelog:&r&7 " + changelog.get()));
+                    for (String keyValue : data.split(",")) {
+                        String[] split = keyValue.split(":");
+                        if (split.length == 3) {
+                            AtomicReference<String> valueRef = map.get(split[0]);
+                            if (valueRef != null) {
+                                valueRef.set(split[1] + split[2].replaceAll("\"|}", ""));
+                            }
+                        }
                     }
-                    commandSender.sendMessage(" ");
-                    commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',
-                            "&8Lastest version: &a" + matcher.group(0) + "&8 | Your version: &c" + pluginVersion));
 
+                    if (diff > 0) {
+                        commandSender
+                                .sendMessage(
+                                        ChatColor.translateAlternateColorCodes('&', "&7There is a plugin update of &9"
+                                                + javaPlugin.getDescription().getName() + "&7 available."));
+                        if (commandSender instanceof Player) {
+                            commandSender.spigot().sendMessage(new ComponentBuilder()
+                                    .append(MessageUtil.getUrlMessage("&9&lDownload", map.get("download").get(),
+                                            "Download newest version"))
+                                    .append(ChatColor.translateAlternateColorCodes('&', " &7 | "))
+                                    .append(MessageUtil.getUrlMessage("&9&lDonate", map.get("donate").get(),
+                                            "Donate a coffee"))
+                                    .append(ChatColor.translateAlternateColorCodes('&', " &7 | "))
+                                    .append(MessageUtil.getUrlMessage("&9&lChangelog", map.get("changelog").get(),
+                                            "See what is changed"))
+                                    .create());
+                        } else {
+                            commandSender.sendMessage(
+                                    ChatColor.translateAlternateColorCodes('&',
+                                            "&9&lDownload:&r&7 " + map.get("download").get()));
+                            commandSender.sendMessage(
+                                    ChatColor.translateAlternateColorCodes('&',
+                                            "&9&lDonate:&r&7 " + map.get("donate").get()));
+                            commandSender.sendMessage(
+                                    ChatColor.translateAlternateColorCodes('&',
+                                            "&9&lChangelog:&r&7 " + map.get("changelog").get()));
+                        }
+                        commandSender.sendMessage(" ");
+                        commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                                "&8Lastest version: &a" + matcher.group(0) + "&8 | Your version: &c"
+                                        + javaPlugin.getDescription().getVersion()));
+
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
         });
     }
 
     public int versionCompare(String v1, String v2) {
-        // vnum stores each numeric part of version
+        char[] v1Array = v1.toCharArray();
+        char[] v2Array = v2.toCharArray();
         int vnum1 = 0, vnum2 = 0;
+        int i = 0, j = 0;
 
-        // loop until both String are processed
-        for (int i = 0, j = 0; (i < v1.length()
-                || j < v2.length());) {
-            // Storing numeric part of
-            // version 1 in vnum1
-            while (i < v1.length()
-                    && v1.charAt(i) != '.') {
-                vnum1 = vnum1 * 10
-                        + (v1.charAt(i) - '0');
+        while (i < v1Array.length || j < v2Array.length) {
+            while (i < v1Array.length && v1Array[i] != '.') {
+                vnum1 = vnum1 * 10 + (v1Array[i] - '0');
                 i++;
             }
 
-            // storing numeric part
-            // of version 2 in vnum2
-            while (j < v2.length()
-                    && v2.charAt(j) != '.') {
-                vnum2 = vnum2 * 10
-                        + (v2.charAt(j) - '0');
+            while (j < v2Array.length && v2Array[j] != '.') {
+                vnum2 = vnum2 * 10 + (v2Array[j] - '0');
                 j++;
             }
 
-            if (vnum1 > vnum2)
+            if (vnum1 > vnum2) {
                 return 1;
-            if (vnum2 > vnum1)
+            } else if (vnum2 > vnum1) {
                 return -1;
-
-            // if equal, reset variables and
-            // go for next numeric part
-            vnum1 = vnum2 = 0;
-            i++;
-            j++;
+            } else {
+                vnum1 = vnum2 = 0;
+                i++;
+                j++;
+            }
         }
+
         return 0;
     }
 
