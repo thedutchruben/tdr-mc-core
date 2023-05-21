@@ -3,6 +3,7 @@ package nl.thedutchruben.mccore.global.caching;
 import java.util.HashMap;
 import java.util.Map;
 import nl.thedutchruben.mccore.global.caching.CachingObject;
+import nl.thedutchruben.mccore.global.caching.CachingFileSystem;
 import nl.thedutchruben.mccore.global.caching.fileSystemTypes.JsonFileType;
 
 public class CachingManager {

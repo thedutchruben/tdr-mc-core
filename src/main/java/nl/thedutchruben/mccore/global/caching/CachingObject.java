@@ -42,6 +42,9 @@ public abstract class CachingObject {
     public abstract Object getData();
 
     public boolean isValid() {
+        if (getExpireDate() != null) {
+            return true;
+        }
         if (new Date().after(getExpireDate())) {
             Mccore.getInstance().getCachingManager().getCachingFileSystem().removeFromFileSystem(this);
             return false;
