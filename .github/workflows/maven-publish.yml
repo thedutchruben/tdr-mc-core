@@ -4,6 +4,8 @@
 name: Maven Package
 
 on:
+  workflow_dispatch:
+  pull_request:
   release:
     types: [ created ]
 
@@ -25,7 +27,9 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '17'
-
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v6
 
       - if: github.event.release
         name: Update version in pom.xml (Release only)
@@ -42,14 +46,23 @@ jobs:
         run: echo ::set-output name=version::$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
         id: project
 
-      - name: Upload Plugin jar
+      - name: Upload Plugin jar if master
+        if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v3
         with:
           name: mccore-${{ env.snapshotVersion }}-${{ env.git_hash }}.jar
           path: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
 
-      - name: Nexus Repo Publish
+      - name: Upload Plugin jar if not master
+        if: github.ref != 'refs/heads/master'
+        uses: actions/upload-artifact@v3
+        with:
+          name: mccore-${{ env.snapshotVersion }}-${{ steps.branch-name.outputs.current_branch }}-${{ env.git_hash }}.jar
+          path: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
+
+      - name: Nexus Repo Publish master
         uses: sonatype-nexus-community/nexus-repo-github-action@master
+        if: github.ref == 'refs/heads/master'
         with:
           serverUrl: https://repo.thedutchruben.nl/
           username: admin
@@ -58,7 +71,20 @@ jobs:
           repository: maven-releases
           coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}
           assets: extension=jar
-          filename: ./mccore-${{ steps.project.outputs.version }}.jar
+          filename: ./target/mccore-${{ steps.project.outputs.version }}.jar
+
+      - name: Nexus Repo Publish not master
+        uses: sonatype-nexus-community/nexus-repo-github-action@master
+        if: github.ref != 'refs/heads/master'
+        with:
+          serverUrl: https://repo.thedutchruben.nl/
+          username: admin
+          password: ${{ secrets.SONAR_TOKEN }}
+          format: maven2
+          repository: maven-releases
+          coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}-${{ steps.branch-name.outputs.current_branch }}
+          assets: extension=jar
+          filename: ./target/mccore-${{ steps.project.outputs.version }}.jar
       - name: send message
         uses: appleboy/discord-action@master
         with:

@@ -1,10 +1,10 @@
 package nl.thedutchruben.mccore;
 
-
 import lombok.SneakyThrows;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import nl.thedutchruben.mccore.spigot.commands.CommandRegistry;
 import nl.thedutchruben.mccore.config.UpdateCheckerConfig;
+import nl.thedutchruben.mccore.global.caching.CachingManager;
 import nl.thedutchruben.mccore.spigot.listeners.ListenersRegistry;
 import nl.thedutchruben.mccore.spigot.runnables.RunnableRegistry;
 import nl.thedutchruben.mccore.spigot.updates.PlayerLoginListener;
@@ -32,47 +32,53 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public final class Mccore {
     private JavaPlugin javaPlugin;
     private static Mccore instance;
     private UpdateCheckerConfig updateCheckerConfig;
     private String tdrId;
+    private CachingManager cachingManager;
 
     private String projectId;
     private PluginType type;
+
     /**
      * Start application
+     * 
      * @param javaPlugin
      */
-    public Mccore(JavaPlugin javaPlugin,String tdrId,String projectId,PluginType type) {
+    public Mccore(JavaPlugin javaPlugin, String tdrId, String projectId, PluginType type) {
         this.javaPlugin = javaPlugin;
         this.tdrId = tdrId;
         this.projectId = projectId;
         this.type = type;
+        this.cachingManager = new CachingManager();
         instance = this;
 
-        switch (type){
+        switch (type) {
             case BUNGEE:
                 break;
             case SPIGOT:
                 try {
                     CommandRegistry commandRegistry = new CommandRegistry(this);
 
-                    commandRegistry.setFailureHandler((reason, sender, command,subCommand) -> {
+                    commandRegistry.setFailureHandler((reason, sender, command, subCommand) -> {
                         switch (reason) {
                             case COMMAND_NOT_FOUND:
                                 sender.sendMessage(ChatColor.RED + "Can't find the command.");
                                 break;
                             case NO_PERMISSION:
-                                if(subCommand != null){
-                                    sender.sendMessage(ChatColor.RED + "You don't have the permission "+ ChatColor.DARK_RED + subCommand.getSubCommand().permission());
-                                }else{
-                                    sender.sendMessage(ChatColor.RED + "You don't have the permission "+ ChatColor.DARK_RED + command.getCommand().permission());
+                                if (subCommand != null) {
+                                    sender.sendMessage(ChatColor.RED + "You don't have the permission "
+                                            + ChatColor.DARK_RED + subCommand.getSubCommand().permission());
+                                } else {
+                                    sender.sendMessage(ChatColor.RED + "You don't have the permission "
+                                            + ChatColor.DARK_RED + command.getCommand().permission());
                                 }
                                 break;
                             case INSUFFICIENT_PARAMETER:
-                                sender.sendMessage(ChatColor.RED + "Wrong usage :"+ ChatColor.DARK_RED + subCommand.getSubCommand().usage());
+                                sender.sendMessage(ChatColor.RED + "Wrong usage :" + ChatColor.DARK_RED
+                                        + subCommand.getSubCommand().usage());
                                 break;
                         }
                     });
@@ -85,16 +91,18 @@ public final class Mccore {
                 break;
         }
 
+        registerCompleters();
+    }
 
-
+    public void registerCompleters() {
         CommandRegistry.getTabCompletable().put("player", commandSender -> {
             Set<String> complete = new HashSet<>();
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                if(commandSender instanceof Player){
-                    if(((Player) commandSender).canSee(onlinePlayer)){
+                if (commandSender instanceof Player) {
+                    if (((Player) commandSender).canSee(onlinePlayer)) {
                         complete.add(onlinePlayer.getName());
                     }
-                }else{
+                } else {
                     complete.add(onlinePlayer.getName());
                 }
             }
@@ -104,11 +112,11 @@ public final class Mccore {
         CommandRegistry.getTabCompletable().put("playername", commandSender -> {
             Set<String> complete = new HashSet<>();
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                if(commandSender instanceof Player){
-                    if(((Player) commandSender).canSee(onlinePlayer)){
+                if (commandSender instanceof Player) {
+                    if (((Player) commandSender).canSee(onlinePlayer)) {
                         complete.add(onlinePlayer.getName());
                     }
-                }else{
+                } else {
                     complete.add(onlinePlayer.getName());
                 }
             }
@@ -118,11 +126,11 @@ public final class Mccore {
         CommandRegistry.getTabCompletable().put("uuid", commandSender -> {
             Set<String> complete = new HashSet<>();
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                if(commandSender instanceof Player){
-                    if(((Player) commandSender).canSee(onlinePlayer)){
+                if (commandSender instanceof Player) {
+                    if (((Player) commandSender).canSee(onlinePlayer)) {
                         complete.add(onlinePlayer.getUniqueId().toString());
                     }
-                }else{
+                } else {
                     complete.add(onlinePlayer.getUniqueId().toString());
                 }
             }
@@ -168,142 +176,134 @@ public final class Mccore {
             }
             return complete;
         });
-
-
     }
 
-    public void startUpdateChecker(UpdateCheckerConfig updateCheckerConfig)
-    {
+    public CachingManager getCachingManager() {
+        return cachingManager;
+    }
+
+    public void startUpdateChecker(UpdateCheckerConfig updateCheckerConfig) {
         this.updateCheckerConfig = updateCheckerConfig;
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this.javaPlugin, () -> getUpdate(Bukkit.getConsoleSender()),60,updateCheckerConfig.getCheckTime());
-        Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(this),javaPlugin);
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this.javaPlugin, () -> getUpdate(Bukkit.getConsoleSender()),
+                60, updateCheckerConfig.getCheckTime());
+        Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(this), javaPlugin);
     }
 
     @SneakyThrows
-    public void getUpdate(CommandSender commandSender){
+    public void getUpdate(CommandSender commandSender) {
         File bStatsFolder = new File(javaPlugin.getDataFolder().getParentFile(), "bStats");
         File configFile = new File(bStatsFolder, "config.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
-        URL url = new URL("https://api.thedutchruben.nl/api/v1/version/" + this.projectId );
+        URL url = new URL("https://api.thedutchruben.nl/api/v1/version/" + this.projectId);
 
         Bukkit.getScheduler().runTaskAsynchronously(this.javaPlugin, () -> {
             HttpURLConnection connection = null;
-
             try {
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestProperty("Plugin", this.javaPlugin.getName());
                 connection.setRequestProperty("Plugin-Type", type.name());
                 connection.setRequestProperty("Plugin-Version", this.javaPlugin.getDescription().getVersion());
                 connection.setRequestProperty("Plugin-Server-Version", this.javaPlugin.getServer().getVersion());
-                connection.setRequestProperty("Plugin-Server-BukkitVersion", this.javaPlugin.getServer().getBukkitVersion());
+                connection.setRequestProperty("Plugin-Server-BukkitVersion",
+                        this.javaPlugin.getServer().getBukkitVersion());
                 connection.setRequestProperty("Plugin-Server-Id", config.getString("serverUuid"));
-                connection.setRequestProperty("Plugin-Server-Players", String.valueOf(this.javaPlugin.getServer().getOnlinePlayers().size()));
+                connection.setRequestProperty("Plugin-Server-Players",
+                        String.valueOf(this.javaPlugin.getServer().getOnlinePlayers().size()));
 
-                BufferedReader br = null;
-                if (connection.getResponseCode() != 200) {
-                    return;
-                }
-                if (100 <= connection.getResponseCode() && connection.getResponseCode() <= 399) {
-                    br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                } else {
-                    br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                }
-                String data = br.readLine();
-//                System.out.println(data);
-                final Pattern pattern = Pattern.compile("\\d{1,2}\\.\\d{1,2}\\.\\d{1,3}", Pattern.MULTILINE);
-                final Matcher matcher = pattern.matcher(data);
-                matcher.find();
+                try (BufferedReader br = (connection.getResponseCode() == 200)
+                        ? new BufferedReader(new InputStreamReader(connection.getInputStream()))
+                        : new BufferedReader(new InputStreamReader(connection.getErrorStream()))) {
 
-                String pluginVersion = javaPlugin.getDescription().getVersion();
-                int diff = versionCompare(matcher.group(0), pluginVersion);
-                Map<String, String> map = new HashMap<>();
-                for (String keyValue: data.split(",")) {
-                    String[] split = keyValue.split(":");
-                    if(split.length == 3){
-                        map.put(split[0], split[1] + split[2]);
+                    String data = br.readLine();
+                    Matcher matcher = Pattern.compile("\\d{1,2}\\.\\d{1,2}\\.\\d{1,3}", Pattern.MULTILINE)
+                            .matcher(data);
+                    matcher.find();
+                    int diff = versionCompare(matcher.group(0), javaPlugin.getDescription().getVersion());
+
+                    Map<String, AtomicReference<String>> map = new HashMap<>();
+                    map.put("download", new AtomicReference<>(""));
+                    map.put("donate", new AtomicReference<>(""));
+                    map.put("changelog", new AtomicReference<>(""));
+
+                    for (String keyValue : data.split(",")) {
+                        String[] split = keyValue.split(":");
+                        if (split.length == 3) {
+                            AtomicReference<String> valueRef = map.get(split[0]);
+                            if (valueRef != null) {
+                                valueRef.set(split[1] + split[2].replaceAll("\"|}", ""));
+                            }
+                        }
+                    }
+
+                    if (diff > 0) {
+                        commandSender
+                                .sendMessage(
+                                        ChatColor.translateAlternateColorCodes('&', "&7There is a plugin update of &9"
+                                                + javaPlugin.getDescription().getName() + "&7 available."));
+                        if (commandSender instanceof Player) {
+                            commandSender.spigot().sendMessage(new ComponentBuilder()
+                                    .append(MessageUtil.getUrlMessage("&9&lDownload", map.get("download").get(),
+                                            "Download newest version"))
+                                    .append(ChatColor.translateAlternateColorCodes('&', " &7 | "))
+                                    .append(MessageUtil.getUrlMessage("&9&lDonate", map.get("donate").get(),
+                                            "Donate a coffee"))
+                                    .append(ChatColor.translateAlternateColorCodes('&', " &7 | "))
+                                    .append(MessageUtil.getUrlMessage("&9&lChangelog", map.get("changelog").get(),
+                                            "See what is changed"))
+                                    .create());
+                        } else {
+                            commandSender.sendMessage(
+                                    ChatColor.translateAlternateColorCodes('&',
+                                            "&9&lDownload:&r&7 " + map.get("download").get()));
+                            commandSender.sendMessage(
+                                    ChatColor.translateAlternateColorCodes('&',
+                                            "&9&lDonate:&r&7 " + map.get("donate").get()));
+                            commandSender.sendMessage(
+                                    ChatColor.translateAlternateColorCodes('&',
+                                            "&9&lChangelog:&r&7 " + map.get("changelog").get()));
+                        }
+                        commandSender.sendMessage(" ");
+                        commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                                "&8Lastest version: &a" + matcher.group(0) + "&8 | Your version: &c"
+                                        + javaPlugin.getDescription().getVersion()));
+
                     }
                 }
-                AtomicReference<String> download = new AtomicReference<>("");
-                AtomicReference<String> donate = new AtomicReference<>("");
-                AtomicReference<String> changelog = new AtomicReference<>("");
-
-                map.forEach((s, s2) -> {
-                    if(s.contains("download")){
-                        download.set(s2.replaceAll("\"", "").replaceAll("}", ""));
-                    }
-                    if(s.contains("donate")){
-                        donate.set(s2.replaceAll("\"", "").replaceAll("}", ""));
-                    }
-                    if(s.contains("changeLog")){
-                        changelog.set(s2.replaceAll("\"", "").replaceAll("}", ""));
-                    }
-                });
-
-
-
-
-
-             if(diff > 0){
-                 commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7There is a plugin update of &9"+javaPlugin.getDescription().getName()+"&7 available."));
-                 if(commandSender instanceof Player){
-                     commandSender.spigot().sendMessage(new ComponentBuilder()
-                             .append(MessageUtil.getUrlMessage("&9&lDownload",download.get(),"Download newest version"))
-                             .append(ChatColor.translateAlternateColorCodes('&'," &7 | "))
-                             .append(MessageUtil.getUrlMessage("&9&lDonate",donate.get(),"Donate a coffee"))
-                             .append(ChatColor.translateAlternateColorCodes('&'," &7 | "))
-                             .append(MessageUtil.getUrlMessage("&9&lChangelog",changelog.get(),"See what is changed")).create());
-                 }else{
-                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lDownload:&r&7 " + download.get()));
-                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lDonate:&r&7 "+ donate.get()));
-                     commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&9&lChangelog:&r&7 " + changelog.get()));
-                 }
-                 commandSender.sendMessage(" ");
-                 commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&',"&8Lastest version: &a"+matcher.group(0)+"&8 | Your version: &c" + pluginVersion));
-
-             }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
         });
     }
 
-    public int versionCompare(String v1, String v2)
-    {
-        // vnum stores each numeric part of version
+    public int versionCompare(String v1, String v2) {
+        char[] v1Array = v1.toCharArray();
+        char[] v2Array = v2.toCharArray();
         int vnum1 = 0, vnum2 = 0;
+        int i = 0, j = 0;
 
-        // loop until both String are processed
-        for (int i = 0, j = 0; (i < v1.length()
-                || j < v2.length());) {
-            // Storing numeric part of
-            // version 1 in vnum1
-            while (i < v1.length()
-                    && v1.charAt(i) != '.') {
-                vnum1 = vnum1 * 10
-                        + (v1.charAt(i) - '0');
+        while (i < v1Array.length || j < v2Array.length) {
+            while (i < v1Array.length && v1Array[i] != '.') {
+                vnum1 = vnum1 * 10 + (v1Array[i] - '0');
                 i++;
             }
 
-            // storing numeric part
-            // of version 2 in vnum2
-            while (j < v2.length()
-                    && v2.charAt(j) != '.') {
-                vnum2 = vnum2 * 10
-                        + (v2.charAt(j) - '0');
+            while (j < v2Array.length && v2Array[j] != '.') {
+                vnum2 = vnum2 * 10 + (v2Array[j] - '0');
                 j++;
             }
 
-            if (vnum1 > vnum2)
+            if (vnum1 > vnum2) {
                 return 1;
-            if (vnum2 > vnum1)
+            } else if (vnum2 > vnum1) {
                 return -1;
-
-            // if equal, reset variables and
-            // go for next numeric part
-            vnum1 = vnum2 = 0;
-            i++;
-            j++;
+            } else {
+                vnum1 = vnum2 = 0;
+                i++;
+                j++;
+            }
         }
+
         return 0;
     }
 
@@ -323,7 +323,7 @@ public final class Mccore {
         return updateCheckerConfig;
     }
 
-    public enum PluginType{
+    public enum PluginType {
         BUNGEE,
         SPIGOT
     }
