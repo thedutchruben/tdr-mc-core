@@ -1,9 +1,8 @@
 package nl.thedutchruben.mccore.spigot.commands;
 
-        import org.bukkit.command.CommandSender;
+import org.bukkit.command.CommandSender;
 
-        import java.util.List;
-        import java.util.Set;
+import java.util.Set;
 
 public interface TabComplete {
     Set<String> getCompletions(CommandSender commandSender);

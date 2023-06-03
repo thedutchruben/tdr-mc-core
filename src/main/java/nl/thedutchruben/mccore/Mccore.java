@@ -2,9 +2,9 @@ package nl.thedutchruben.mccore;
 
 import lombok.SneakyThrows;
 import net.md_5.bungee.api.chat.ComponentBuilder;
-import nl.thedutchruben.mccore.spigot.commands.CommandRegistry;
 import nl.thedutchruben.mccore.config.UpdateCheckerConfig;
 import nl.thedutchruben.mccore.global.caching.CachingManager;
+import nl.thedutchruben.mccore.spigot.commands.CommandRegistry;
 import nl.thedutchruben.mccore.spigot.listeners.ListenersRegistry;
 import nl.thedutchruben.mccore.spigot.runnables.RunnableRegistry;
 import nl.thedutchruben.mccore.spigot.updates.PlayerLoginListener;
@@ -21,7 +21,10 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
@@ -48,12 +51,12 @@ public final class Mccore {
      * @param javaPlugin
      */
     public Mccore(JavaPlugin javaPlugin, String tdrId, String projectId, PluginType type) {
+        instance = this;
         this.javaPlugin = javaPlugin;
         this.tdrId = tdrId;
         this.projectId = projectId;
         this.type = type;
         this.cachingManager = new CachingManager();
-        instance = this;
 
         switch (type) {
             case BUNGEE:

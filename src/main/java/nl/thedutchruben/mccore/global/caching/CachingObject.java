@@ -1,8 +1,8 @@
 package nl.thedutchruben.mccore.global.caching;
 
-import java.util.Date;
-
 import nl.thedutchruben.mccore.Mccore;
+
+import java.util.Date;
 
 public abstract class CachingObject {
 
@@ -42,11 +42,13 @@ public abstract class CachingObject {
     public abstract Object getData();
 
     public boolean isValid() {
-        if (getExpireDate() != null) {
+        if (getExpireDate() == null) {
             return true;
         }
         if (new Date().after(getExpireDate())) {
-            Mccore.getInstance().getCachingManager().getCachingFileSystem().removeFromFileSystem(this);
+            if(isPersistent()){
+                Mccore.getInstance().getCachingManager().getCachingFileSystem().removeFromFileSystem(this);
+            }
             return false;
         }
 

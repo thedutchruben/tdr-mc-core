@@ -2,16 +2,10 @@ package nl.thedutchruben.mccore.utils.classes;
 
 
 import com.google.common.reflect.ClassPath;
-import lombok.SneakyThrows;
-import nl.thedutchruben.mccore.Mccore;
-import org.bukkit.Bukkit;
 
-import java.io.*;
-import java.net.URL;
-import java.util.*;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
-import java.util.stream.Collectors;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ClassFinder {
 

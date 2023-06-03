@@ -1,10 +1,9 @@
 package nl.thedutchruben.mccore.global.caching;
 
+import nl.thedutchruben.mccore.global.caching.fileSystemTypes.JsonFileType;
+
 import java.util.HashMap;
 import java.util.Map;
-import nl.thedutchruben.mccore.global.caching.CachingObject;
-import nl.thedutchruben.mccore.global.caching.CachingFileSystem;
-import nl.thedutchruben.mccore.global.caching.fileSystemTypes.JsonFileType;
 
 public class CachingManager {
     private Map<String, CachingObject> cachingMap = new HashMap<>();
@@ -28,6 +27,9 @@ public class CachingManager {
      */
     public CachingObject getCachingObject(String key) {
         CachingObject object = cachingMap.get(key);
+        if(object == null){
+            return null;
+        }
         if (object.isValid()) {
             return object;
         }

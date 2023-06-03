@@ -3,8 +3,6 @@ package nl.thedutchruben.mccore.global.caching;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import nl.thedutchruben.mccore.global.caching.CachingObject;
-
 /**
  * Abstract file system so i can implement thins like redis cache later
  */
