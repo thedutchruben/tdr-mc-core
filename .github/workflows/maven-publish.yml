@@ -45,7 +45,10 @@ jobs:
       - name: Extract Maven project version
         run: echo ::set-output name=version::$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
         id: project
-
+        
+      - name: show files
+        run: ls -l
+      
       - name: Upload Plugin jar if master
         if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v3
