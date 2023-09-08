@@ -2,6 +2,7 @@ package nl.thedutchruben.mccore.spigot.commands;
 
 import nl.thedutchruben.mccore.Mccore;
 import nl.thedutchruben.mccore.utils.classes.ClassFinder;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.*;
 import org.bukkit.util.StringUtil;
@@ -19,6 +20,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] strings) {
         final List<String> completions = new ArrayList<>();
         final Set<String> COMMANDS = new HashSet<>();
+        completions.add("help");
         StringBuilder sb = new StringBuilder();
         if(strings.length == 1){
             for (int i = -1; i <= 0; i++) {
@@ -88,7 +90,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
         this.failureHandler = failureHandler;
     }
 
-
     public CommandRegistry(Mccore mccore) throws InstantiationException, IllegalAccessException {
 
         for (Class<?> allClass : new ClassFinder().getClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
@@ -121,6 +122,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
         }
 
     }
+
 
 
     public enum CommandFailReason {
@@ -166,10 +168,21 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                     }
 
 
+
+
                     TdrSubCommand annotation = null;
                     if(args.length == 0){
                         annotation = wrapper.getDefaultCommand();
                     }else if(wrapper.getSubCommand().get(args[0]) != null){
+                        if(args[0].equalsIgnoreCase("help")){
+                            sender.sendMessage(ChatColor.GOLD+"----------"+ChatColor.WHITE+"Help : " + commanddata.command() +ChatColor.GOLD+ " ----------");
+                            sender.sendMessage(ChatColor.GOLD +"/"+ commanddata.command() + " " +ChatColor.GRAY  + " : " +ChatColor.WHITE + wrapper.getDefaultCommand().getSubCommand().description());
+                            wrapper.getSubCommand().forEach((s, tdrSubCommand) -> {
+                                sender.sendMessage(ChatColor.GOLD +"/"+ commanddata.command() + " "+ ChatColor.WHITE +tdrSubCommand.getSubCommand().subCommand() + " " +ChatColor.GRAY + tdrSubCommand.getSubCommand().usage() + " : " +ChatColor.WHITE + tdrSubCommand.getSubCommand().description());
+                            });
+
+                            return true;
+                        }
                         annotation = wrapper.getSubCommand().get(args[0]);
                     }else{
                         annotation = wrapper.getSubCommand().get("");
@@ -227,6 +240,9 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                 }
             }
         }
+
+
+
 
         failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, null,null);
         return false;

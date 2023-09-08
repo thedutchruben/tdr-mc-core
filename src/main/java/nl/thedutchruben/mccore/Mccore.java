@@ -187,13 +187,13 @@ public final class Mccore {
 
     public void startUpdateChecker(UpdateCheckerConfig updateCheckerConfig) {
         this.updateCheckerConfig = updateCheckerConfig;
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this.javaPlugin, () -> getUpdate(Bukkit.getConsoleSender()),
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this.javaPlugin, () -> getUpdate(Bukkit.getConsoleSender(),false),
                 60, updateCheckerConfig.getCheckTime());
         Bukkit.getPluginManager().registerEvents(new PlayerLoginListener(this), javaPlugin);
     }
 
     @SneakyThrows
-    public void getUpdate(CommandSender commandSender) {
+    public void getUpdate(CommandSender commandSender,boolean showNoUpdateMessage ) {
         File bStatsFolder = new File(javaPlugin.getDataFolder().getParentFile(), "bStats");
         File configFile = new File(bStatsFolder, "config.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
@@ -270,6 +270,11 @@ public final class Mccore {
                                 "&8Lastest version: &a" + matcher.group(0) + "&8 | Your version: &c"
                                         + javaPlugin.getDescription().getVersion()));
 
+                    }else{
+                        if(showNoUpdateMessage){
+                            commandSender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7There is no plugin update of &9"
+                                    + javaPlugin.getDescription().getName() + "&7 available."));
+                        }
                     }
                 }
             } catch (IOException e) {

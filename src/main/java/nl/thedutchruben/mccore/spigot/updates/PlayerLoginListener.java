@@ -15,7 +15,7 @@ public class PlayerLoginListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event){
         if(event.getPlayer().hasPermission(mccore.getUpdateCheckerConfig().getPermission())){
-            mccore.getUpdate(event.getPlayer());
+            mccore.getUpdate(event.getPlayer(),false);
         }
     }
 }
