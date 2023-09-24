@@ -23,7 +23,6 @@ import java.util.Map;
  * ItemBuilder - API Class to create a {@link org.bukkit.inventory.ItemStack} with just one line of Code
  * @version 1.8
  * @author Acquized
- * @contributor Kev575
  */
 public class ItemBuilder {
 
@@ -329,7 +328,7 @@ public class ItemBuilder {
     }
 
     /**
-     * Toggles replacement of the '&' Characters in Strings
+     * Toggles replacement of the Characters in Strings
      * @deprecated Use {@code ItemBuilder#toggleReplaceAndSymbol}
      */
     @Deprecated
@@ -339,7 +338,7 @@ public class ItemBuilder {
     }
 
     /**
-     * Enables / Disables replacement of the '&' Character in Strings
+     * Enables / Disables replacement of the Character in Strings
      * @param replace Determinates if it should be replaced or not
      */
     public ItemBuilder replaceAndSymbol(boolean replace) {
@@ -347,7 +346,7 @@ public class ItemBuilder {
         return this;
     }
 
-    /** Toggles replacement of the '&' Character in Strings */
+    /** Toggles replacement of the Character in Strings */
     public ItemBuilder toggleReplaceAndSymbol() {
         replaceAndSymbol(!andSymbol);
         return this;
@@ -402,7 +401,7 @@ public class ItemBuilder {
         return lore;
     }
 
-    /** Returns if the '&' Character will be replaced */
+    /** Returns if the Character will be replaced */
     public boolean getAndSymbol() {
         return andSymbol;
     }
