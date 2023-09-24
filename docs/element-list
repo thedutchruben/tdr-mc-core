@@ -1,0 +1,16 @@
+nl.thedutchruben.mccore
+nl.thedutchruben.mccore.bungee.commands
+nl.thedutchruben.mccore.config
+nl.thedutchruben.mccore.global.caching
+nl.thedutchruben.mccore.global.caching.fileSystemTypes
+nl.thedutchruben.mccore.spigot.commands
+nl.thedutchruben.mccore.spigot.listeners
+nl.thedutchruben.mccore.spigot.runnables
+nl.thedutchruben.mccore.spigot.ui
+nl.thedutchruben.mccore.spigot.updates
+nl.thedutchruben.mccore.utils.classes
+nl.thedutchruben.mccore.utils.config
+nl.thedutchruben.mccore.utils.hologram
+nl.thedutchruben.mccore.utils.item
+nl.thedutchruben.mccore.utils.message
+nl.thedutchruben.mccore.utils.particle
