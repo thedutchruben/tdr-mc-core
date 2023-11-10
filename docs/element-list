@@ -10,6 +10,7 @@ nl.thedutchruben.mccore.spigot.ui
 nl.thedutchruben.mccore.spigot.updates
 nl.thedutchruben.mccore.utils.classes
 nl.thedutchruben.mccore.utils.config
+nl.thedutchruben.mccore.utils.firework
 nl.thedutchruben.mccore.utils.hologram
 nl.thedutchruben.mccore.utils.item
 nl.thedutchruben.mccore.utils.message
