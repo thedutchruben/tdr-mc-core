@@ -6,7 +6,7 @@
 
     <groupId>nl.thedutchruben</groupId>
     <artifactId>mccore</artifactId>
-    <version>1.4.0-dev-01</version>
+    <version>1.4.0-dev-02</version>
     <packaging>jar</packaging>
 
     <name>Mccore</name>

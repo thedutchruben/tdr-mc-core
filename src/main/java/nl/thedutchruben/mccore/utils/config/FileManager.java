@@ -116,6 +116,7 @@ public class FileManager {
          * @return
          */
         public Config reload() {
+            System.out.println(plugin.getName());
             if (file == null)
                 this.file = new File(plugin.getDataFolder(), this.name);
 
