@@ -47,7 +47,7 @@ public abstract class CachingObject {
         }
         if (new Date().after(getExpireDate())) {
             if(isPersistent()){
-                Mccore.getInstance().getCachingManager().getCachingFileSystem().removeFromFileSystem(this);
+                Mccore.getInstance().getCachingManager().getCachingFileSystem().remove(this);
             }
             return false;
         }
@@ -59,7 +59,7 @@ public abstract class CachingObject {
      * Save the object
      */
     public void saveToDisk() {
-        Mccore.getInstance().getCachingManager().getCachingFileSystem().saveToFileSystem(getKey(), this);
+        Mccore.getInstance().getCachingManager().getCachingFileSystem().save(getKey(), this);
     }
 
 }

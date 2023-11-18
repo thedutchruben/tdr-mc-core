@@ -14,19 +14,19 @@ public abstract class CachingFileSystem {
      * @param key
      * @param cachingObject
      */
-    public abstract CompletableFuture<Void> saveToFileSystem(String key, CachingObject cachingObject);
+    public abstract CompletableFuture<Void> save(String key, CachingObject cachingObject);
 
     /**
      * Remove the object from the file system
      * 
      * @param cachingObject
      */
-    public abstract CompletableFuture<Void> removeFromFileSystem(CachingObject cachingObject);
+    public abstract CompletableFuture<Void> remove(CachingObject cachingObject);
 
     /**
      * Returns a list with saved caching object
      * 
      * @return
      */
-    public abstract CompletableFuture<List<CachingObject>> getAllFromFileSystem();
+    public abstract CompletableFuture<List<CachingObject>> loadALl();
 }

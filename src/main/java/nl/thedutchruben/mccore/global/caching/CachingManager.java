@@ -11,7 +11,7 @@ public class CachingManager {
 
     public CachingManager() {
         this.cachingFileSystem = new JsonFileType();
-        this.cachingFileSystem.getAllFromFileSystem().whenCompleteAsync((aList, throwable) -> {
+        this.cachingFileSystem.loadALl().whenCompleteAsync((aList, throwable) -> {
             aList.forEach(data -> {
                 cachingMap.put(data.getKey(), data);
             });

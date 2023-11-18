@@ -18,7 +18,7 @@ public class JsonFileType extends CachingFileSystem {
             .disableHtmlEscaping().setPrettyPrinting().create();
 
     @Override
-    public CompletableFuture<Void> saveToFileSystem(String key, CachingObject cachingObject) {
+    public CompletableFuture<Void> save(String key, CachingObject cachingObject) {
         return CompletableFuture.supplyAsync(() -> {
             fileManager.getConfig("caching/" + key + ".json").get().set("", gson.toJson(cachingObject));
             fileManager.getConfig("caching/" + key + ".json").save();
@@ -27,7 +27,7 @@ public class JsonFileType extends CachingFileSystem {
     }
 
     @Override
-    public CompletableFuture<Void> removeFromFileSystem(CachingObject cachingObject) {
+    public CompletableFuture<Void> remove(CachingObject cachingObject) {
         return CompletableFuture.supplyAsync(() -> {
             fileManager.getConfig("caching/" + cachingObject.getKey() + ".json").file.delete();
             return null;
@@ -35,7 +35,7 @@ public class JsonFileType extends CachingFileSystem {
     }
 
     @Override
-    public CompletableFuture<List<CachingObject>> getAllFromFileSystem() {
+    public CompletableFuture<List<CachingObject>> loadALl() {
         return CompletableFuture.supplyAsync(() -> {
             List<CachingObject> list = new ArrayList<>();
             if(Mccore.getInstance().getJavaPlugin() == null) return list;
