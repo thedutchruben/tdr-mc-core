@@ -115,6 +115,13 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                         tdrCommand.setDefaultCommand(new TdrSubCommand(method,allClass.newInstance(),annotation));
                     }
 
+                    Fallback aFallback = method.getAnnotation(Fallback.class);
+
+                    if (aDefault != null) {
+                        tdrCommand.setaFallback(aFallback);
+                        tdrCommand.setFallBackCommand(new TdrSubCommand(method,allClass.newInstance(),annotation));
+                    }
+
                 }
                 commandMap.put(an.command(),tdrCommand);
             }
@@ -173,7 +180,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                     TdrSubCommand annotation = null;
                     if(args.length == 0){
                         annotation = wrapper.getDefaultCommand();
-                    }else if(wrapper.getSubCommand().get(args[0]) != null){
+                    }else if(wrapper.getSubCommand().get(args[0]) == null){
                         if(args[0].equalsIgnoreCase("help")){
                             sender.sendMessage(ChatColor.GOLD+"----------"+ChatColor.WHITE+"Help : " + commanddata.command() +ChatColor.GOLD+ " ----------");
                             sender.sendMessage(ChatColor.GOLD +"/"+ commanddata.command() + " " +ChatColor.GRAY  + " : " +ChatColor.WHITE + wrapper.getDefaultCommand().getSubCommand().description());
@@ -185,7 +192,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                         }
                         annotation = wrapper.getSubCommand().get(args[0]);
                     }else{
-                        annotation = wrapper.getSubCommand().get("");
+                        annotation = wrapper.getFallBackCommand();
                     }
 
                     if(annotation == null){

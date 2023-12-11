@@ -1,5 +1,7 @@
 package nl.thedutchruben.mccore.spigot.commands;
 
+import lombok.Getter;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,7 +9,12 @@ public class TdrCommand {
 
     private Command command;
     private Default aDefault;
+    private Fallback aFallback;
+
+    @Getter
     private TdrSubCommand defaultCommand;
+    @Getter
+    private TdrSubCommand fallBackCommand;
     private Map<String,TdrSubCommand> subCommand;
 
     public TdrCommand(Command command) {
@@ -20,12 +27,16 @@ public class TdrCommand {
         this.defaultCommand = defaultCommand;
     }
 
-    public TdrSubCommand getDefaultCommand() {
-        return defaultCommand;
+    public void setFallBackCommand(TdrSubCommand fallBackCommand) {
+        this.fallBackCommand = fallBackCommand;
     }
 
     public void setaDefault(Default aDefault) {
         this.aDefault = aDefault;
+    }
+
+    public void setaFallback(Fallback aFallback) {
+        this.aFallback = aFallback;
     }
 
     public Default getDefault() {
