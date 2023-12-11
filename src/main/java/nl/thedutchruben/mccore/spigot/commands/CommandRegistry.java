@@ -100,7 +100,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                     SubCommand annotation = method.getAnnotation(SubCommand.class);
 
                     if (annotation != null) {
-
                         PluginCommand basePluginCommand = mccore.getJavaPlugin().getServer().getPluginCommand(an.command());
                         basePluginCommand.setDescription(an.description());
                         basePluginCommand.setAliases(Arrays.asList(an.aliases()));
@@ -117,7 +116,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
 
                     Fallback aFallback = method.getAnnotation(Fallback.class);
 
-                    if (aDefault != null) {
+                    if (aFallback != null) {
                         tdrCommand.setaFallback(aFallback);
                         tdrCommand.setFallBackCommand(new TdrSubCommand(method,allClass.newInstance(),annotation));
                     }
