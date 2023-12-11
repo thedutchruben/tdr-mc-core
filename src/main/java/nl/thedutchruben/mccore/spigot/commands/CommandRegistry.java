@@ -173,18 +173,20 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                         return true;
                     }
 
-
-
-
                     TdrSubCommand annotation = null;
                     if(args.length == 0){
                         annotation = wrapper.getDefaultCommand();
-                    }else if(wrapper.getSubCommand().get(args[0]) == null){
+                    }else if(wrapper.getSubCommand().get(args[0]) != null || args[0].equalsIgnoreCase("help")){
                         if(args[0].equalsIgnoreCase("help")){
                             sender.sendMessage(ChatColor.GOLD+"----------"+ChatColor.WHITE+"Help : " + commanddata.command() +ChatColor.GOLD+ " ----------");
                             sender.sendMessage(ChatColor.GOLD +"/"+ commanddata.command() + " " +ChatColor.GRAY  + " : " +ChatColor.WHITE + wrapper.getDefaultCommand().getSubCommand().description());
                             wrapper.getSubCommand().forEach((s, tdrSubCommand) -> {
-                                sender.sendMessage(ChatColor.GOLD +"/"+ commanddata.command() + " "+ ChatColor.WHITE +tdrSubCommand.getSubCommand().subCommand() + " " +ChatColor.GRAY + tdrSubCommand.getSubCommand().usage() + " : " +ChatColor.WHITE + tdrSubCommand.getSubCommand().description());
+                                if(tdrSubCommand.getSubCommand().subCommand() != null || !Objects.equals(tdrSubCommand.getSubCommand().subCommand(), "")){
+                                    sender.sendMessage(ChatColor.GOLD +"/"+ commanddata.command() + " "+ ChatColor.WHITE +tdrSubCommand.getSubCommand().subCommand() + " " +ChatColor.GRAY + tdrSubCommand.getSubCommand().usage() + " : " +ChatColor.WHITE + tdrSubCommand.getSubCommand().description());
+                                }else{
+                                    sender.sendMessage(ChatColor.GOLD +"/"+ commanddata.command() +ChatColor.GRAY +  " : " +ChatColor.WHITE + tdrSubCommand.getSubCommand().description());
+
+                                }
                             });
 
                             return true;
@@ -192,6 +194,7 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                         annotation = wrapper.getSubCommand().get(args[0]);
                     }else{
                         annotation = wrapper.getFallBackCommand();
+                        System.out.println(annotation);
                     }
 
                     if(annotation == null){
