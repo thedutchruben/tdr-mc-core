@@ -41,6 +41,10 @@ public class FileManager {
         return getConfig(name).save();
     }
 
+    public HashMap<String, Config> getConfigs() {
+        return configs;
+    }
+
     /**
      * Reload the config by the name(Don't forget the .yml)
      *
