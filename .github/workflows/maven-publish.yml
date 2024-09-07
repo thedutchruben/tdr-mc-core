@@ -63,31 +63,11 @@ jobs:
           name: mccore-${{ env.snapshotVersion }}-${{ steps.branch-name.outputs.current_branch }}-${{ env.git_hash }}.jar
           path: ${{ env.artifactPath }}/mccore-${{ steps.project.outputs.version }}.jar
 
-      - name: Nexus Repo Publish master
-        uses: sonatype-nexus-community/nexus-repo-github-action@master
-        if: github.ref == 'refs/heads/master'
-        with:
-          serverUrl: https://nexus.thedutchservers.com/
-          username: admin
-          password: ${{ secrets.SONAR_TOKEN }}
-          format: maven2
-          repository: maven-releases
-          coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}
-          assets: extension=jar
-          filename: ./target/mccore-${{ steps.project.outputs.version }}.jar
+      - name: Publish to GitHub Packages
+        run: mvn deploy -DskipTests --settings .github/maven-settings.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Nexus Repo Publish not master
-        uses: sonatype-nexus-community/nexus-repo-github-action@master
-        if: github.ref != 'refs/heads/master'
-        with:
-          serverUrl: https://nexus.thedutchservers.com
-          username: admin
-          password: ${{ secrets.SONAR_TOKEN }}
-          format: maven2
-          repository: maven-releases
-          coordinates: groupId=nl.thedutchruben artifactId=mccore version=${{ steps.project.outputs.version }}-${{ steps.branch-name.outputs.current_branch }}
-          assets: extension=jar
-          filename: ./target/mccore-${{ steps.project.outputs.version }}.jar
       - name: send message
         uses: appleboy/discord-action@master
         with:
