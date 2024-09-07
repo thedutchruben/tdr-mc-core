@@ -6,7 +6,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 public class PlayerLoginListener implements Listener {
-    private Mccore mccore;
+    private final Mccore mccore;
 
     public PlayerLoginListener(Mccore mccore) {
         this.mccore = mccore;
