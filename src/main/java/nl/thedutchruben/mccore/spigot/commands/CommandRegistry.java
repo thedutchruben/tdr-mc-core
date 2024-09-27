@@ -46,7 +46,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
             }
         }
 
-
         if(strings.length != 1){
             TdrCommand wrapper = commandMap.get(command.getName());
             if(wrapper.getSubCommand().get(strings[0]) != null){
@@ -66,7 +65,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                             }
                         }
                     }
-
                 }
             }
 
@@ -80,7 +78,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
     public interface CommandFailureHandler {
         void handleFailure(CommandFailReason reason, CommandSender sender, TdrCommand command,TdrSubCommand tdrSubCommand);
     }
-
 
     public CommandFailureHandler getFailureHandler() {
         return failureHandler;
@@ -128,8 +125,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
         }
 
     }
-
-
 
     public enum CommandFailReason {
         INSUFFICIENT_PARAMETER,
@@ -194,7 +189,6 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                         annotation = wrapper.getSubCommand().get(args[0]);
                     }else{
                         annotation = wrapper.getFallBackCommand();
-                        System.out.println(annotation);
                     }
 
                     if(annotation == null){
@@ -202,46 +196,42 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
                         return true;
                     }
 
-
-
-                    if (!annotation.getSubCommand().permission().equals("") && !sender.hasPermission(annotation.getSubCommand().permission())) {
-                        failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper,annotation);
+                    if (!annotation.getSubCommand().permission().isEmpty() && !sender.hasPermission(annotation.getSubCommand().permission())) {
+                        failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper, annotation);
                         return true;
                     }
-                    //create,"test,test",21-02-2022,10:00:00,11:00:00,test
-                    String[] actualParams = Arrays.copyOfRange(args, (annotation.getSubCommand().subCommand()).split(" ").length - 1, args.length);
+
+                    String[] actualParams = Arrays.copyOfRange(args, annotation.getSubCommand().subCommand().split(" ").length - 1, args.length);
                     List<String> params = new ArrayList<>();
-                    //"testings,123"
                     StringBuilder combine = new StringBuilder();
                     boolean combineNext = false;
-                    for (String actualParam : actualParams) {
-                        if(actualParam.startsWith("\"") && actualParam.endsWith("\"")) {
-                            params.add(actualParam.replaceAll("\"",""));
-                        }else if(actualParam.startsWith("\"")){
+
+                    for (String param : actualParams) {
+                        if (param.startsWith("\"") && param.endsWith("\"")) {
+                            params.add(param.replace("\"", ""));
+                        } else if (param.startsWith("\"")) {
                             combineNext = true;
-                            combine.append(actualParam);
-                        }else if(actualParam.endsWith("\"")){
+                            combine.append(param);
+                        } else if (param.endsWith("\"")) {
                             combineNext = false;
-                            combine.append(" ").append(actualParam);
-                            params.add(combine.toString().replaceAll("\"",""));
-                        }else{
-                            if(combineNext){
-                                combine.append(" ").append(actualParam);
-                            }else{
-                                params.add(actualParam);
+                            combine.append(" ").append(param);
+                            params.add(combine.toString().replace("\"", ""));
+                        } else {
+                            if (combineNext) {
+                                combine.append(" ").append(param);
+                            } else {
+                                params.add(param);
                             }
                         }
                     }
 
-
-                    if(annotation.getSubCommand().minParams() != 0){
-                        if(params.size() < annotation.getSubCommand().minParams() || params.size()  > annotation.getSubCommand().maxParams()){
-                            failureHandler.handleFailure(CommandFailReason.INSUFFICIENT_PARAMETER, sender, wrapper,annotation);
-                            return true;
-                        }
+                    if (params.size() < annotation.getSubCommand().minParams() || params.size() > annotation.getSubCommand().maxParams()) {
+                        failureHandler.handleFailure(CommandFailReason.INSUFFICIENT_PARAMETER, sender, wrapper, annotation);
+                        return true;
                     }
+
                     try {
-                         annotation.getMethod().invoke(annotation.getInstance(), sender, params);
+                        annotation.getMethod().invoke(annotation.getInstance(), sender, params);
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
@@ -250,14 +240,9 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
             }
         }
 
-
-
-
         failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, null,null);
         return false;
     }
-
-
 
     public static Map<String, TabComplete> getTabCompletable() {
         return tabCompletable;

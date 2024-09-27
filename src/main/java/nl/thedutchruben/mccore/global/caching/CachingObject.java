@@ -14,7 +14,7 @@ public abstract class CachingObject {
     public abstract String getKey();
 
     /**
-     * if true the data will also be saved on on the disk
+     * if true the data will also be saved on the disk
      * 
      * @return
      */
