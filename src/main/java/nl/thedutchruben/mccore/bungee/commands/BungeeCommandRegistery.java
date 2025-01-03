@@ -9,7 +9,6 @@ public class BungeeCommandRegistery {
             if(allClass.isAnnotationPresent(BungeeCommand.class)) {
 
             }
-            }
+        }
     }
-
 }

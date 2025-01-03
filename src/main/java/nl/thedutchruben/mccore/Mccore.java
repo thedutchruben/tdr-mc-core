@@ -94,18 +94,14 @@ public final class Mccore {
                 break;
         }
 
-        registerCompleters();
+        registerTabCompletions();
     }
 
-    public void registerCompleters() {
+    public void registerTabCompletions() {
         CommandRegistry.getTabCompletable().put("player", commandSender -> {
             Set<String> complete = new HashSet<>();
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                if (commandSender instanceof Player) {
-                    if (((Player) commandSender).canSee(onlinePlayer)) {
-                        complete.add(onlinePlayer.getName());
-                    }
-                } else {
+                if (!(commandSender instanceof Player) || ((Player) commandSender).canSee(onlinePlayer)) {
                     complete.add(onlinePlayer.getName());
                 }
             }
@@ -115,11 +111,7 @@ public final class Mccore {
         CommandRegistry.getTabCompletable().put("playername", commandSender -> {
             Set<String> complete = new HashSet<>();
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                if (commandSender instanceof Player) {
-                    if (((Player) commandSender).canSee(onlinePlayer)) {
-                        complete.add(onlinePlayer.getName());
-                    }
-                } else {
+                if (!(commandSender instanceof Player) || ((Player) commandSender).canSee(onlinePlayer)) {
                     complete.add(onlinePlayer.getName());
                 }
             }
@@ -221,7 +213,7 @@ public final class Mccore {
                     Matcher matcher = Pattern.compile("\\d{1,2}\\.\\d{1,2}\\.\\d{1,3}", Pattern.MULTILINE)
                             .matcher(data);
                     matcher.find();
-                    int diff = versionCompare(matcher.group(0), javaPlugin.getDescription().getVersion());
+                    int diff = compareVersions(matcher.group(0), javaPlugin.getDescription().getVersion());
 
                     Map<String, AtomicReference<String>> map = new HashMap<>();
                     map.put("download", new AtomicReference<>(""));
@@ -284,34 +276,42 @@ public final class Mccore {
         });
     }
 
-    public int versionCompare(String v1, String v2) {
-        char[] v1Array = v1.toCharArray();
-        char[] v2Array = v2.toCharArray();
-        int vnum1 = 0, vnum2 = 0;
+    public int compareVersions(String version1, String version2) {
+        char[] v1Chars = version1.toCharArray();
+        char[] v2Chars = version2.toCharArray();
+
+        int currentSegmentV1 = 0, currentSegmentV2 = 0;
         int i = 0, j = 0;
 
-        while (i < v1Array.length || j < v2Array.length) {
-            while (i < v1Array.length && v1Array[i] != '.') {
-                vnum1 = vnum1 * 10 + (v1Array[i] - '0');
+        // Loop through both version strings until we reach the end of both
+        while (i < v1Chars.length || j < v2Chars.length) {
+
+            // Process the next segment of version 1
+            while (i < v1Chars.length && v1Chars[i] != '.') {
+                currentSegmentV1 = currentSegmentV1 * 10 + (v1Chars[i] - '0');
                 i++;
             }
 
-            while (j < v2Array.length && v2Array[j] != '.') {
-                vnum2 = vnum2 * 10 + (v2Array[j] - '0');
+            // Process the next segment of version 2
+            while (j < v2Chars.length && v2Chars[j] != '.') {
+                currentSegmentV2 = currentSegmentV2 * 10 + (v2Chars[j] - '0');
                 j++;
             }
 
-            if (vnum1 > vnum2) {
-                return 1;
-            } else if (vnum2 > vnum1) {
-                return -1;
-            } else {
-                vnum1 = vnum2 = 0;
-                i++;
-                j++;
+            // Compare the current segments
+            if (currentSegmentV1 > currentSegmentV2) {
+                return 1;  // Version 1 is greater
+            } else if (currentSegmentV1 < currentSegmentV2) {
+                return -1; // Version 2 is greater
             }
+
+            // Reset segment values for the next comparison and skip the dot
+            currentSegmentV1 = currentSegmentV2 = 0;
+            i++;
+            j++;
         }
 
+        // If all segments are equal, the versions are the same
         return 0;
     }
 

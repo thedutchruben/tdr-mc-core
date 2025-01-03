@@ -2,12 +2,17 @@ package nl.thedutchruben.mccore.spigot.runnables;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.regex.*;
 
 public class CronScheduler {
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
+    /**
+     * Schedules a task to run based on a cron expression.
+     *
+     * @param cronExpression the cron expression defining the schedule
+     * @param task the task to be executed
+     */
     public void scheduleTask(String cronExpression, Runnable task) {
         // Convert cron expression into its components
         CronComponents cronComponents = parseCronExpression(cronExpression);
@@ -24,6 +29,13 @@ public class CronScheduler {
         }, 0, 1, TimeUnit.MINUTES); // Check every minute
     }
 
+    /**
+     * Checks if the current time matches the cron expression components.
+     *
+     * @param currentTime the current time
+     * @param cronComponents the components of the cron expression
+     * @return true if the current time matches the cron expression, false otherwise
+     */
     private boolean matchesCron(Calendar currentTime, CronComponents cronComponents) {
         return matchesField(currentTime.get(Calendar.MINUTE), cronComponents.minute) &&
                 matchesField(currentTime.get(Calendar.HOUR_OF_DAY), cronComponents.hour) &&
@@ -32,6 +44,13 @@ public class CronScheduler {
                 matchesField(currentTime.get(Calendar.DAY_OF_WEEK), cronComponents.dayOfWeek);
     }
 
+    /**
+     * Checks if a value matches a cron field.
+     *
+     * @param value the value to check
+     * @param field the cron field
+     * @return true if the value matches the cron field, false otherwise
+     */
     private boolean matchesField(int value, CronField field) {
         if (field.isWildcard()) return true; // If it's "*", it matches all values
         if (field.isList()) {
@@ -48,6 +67,13 @@ public class CronScheduler {
         return false;
     }
 
+    /**
+     * Parses a cron expression string into its components.
+     *
+     * @param cronExpression the cron expression string to parse
+     * @return a CronComponents object representing the parsed components
+     * @throws IllegalArgumentException if the cron expression does not have 5 fields
+     */
     private CronComponents parseCronExpression(String cronExpression) {
         String[] parts = cronExpression.split("\\s+");
         if (parts.length != 5) {
@@ -64,6 +90,12 @@ public class CronScheduler {
         return components;
     }
 
+    /**
+     * Parses a cron field string and returns a CronField object representing the field.
+     *
+     * @param field the cron field string to parse
+     * @return a CronField object representing the parsed field
+     */
     private CronField parseField(String field) {
         CronField cronField = new CronField();
 
@@ -99,42 +131,100 @@ public class CronScheduler {
         return cronField;
     }
 
-    // Cron Components representing each field in the cron expression
+    /**
+     * Represents the components of a cron expression.
+     */
     static class CronComponents {
-        CronField minute;
-        CronField hour;
-        CronField dayOfMonth;
-        CronField month;
-        CronField dayOfWeek;
+        CronField minute;      // The minute field of the cron expression
+        CronField hour;        // The hour field of the cron expression
+        CronField dayOfMonth;  // The day of the month field of the cron expression
+        CronField month;       // The month field of the cron expression
+        CronField dayOfWeek;   // The day of the week field of the cron expression
     }
 
-    // Class representing each field's possible values (wildcard, range, list, step)
+    /**
+     * Represents a field in a cron expression with various possible values.
+     */
     static class CronField {
-        private boolean wildcard;
-        private int rangeStart, rangeEnd;
-        private int[] listValues;
-        private int step;
+        private boolean wildcard; // Indicates if the field is a wildcard ("*")
+        private int rangeStart, rangeEnd; // Start and end values for a range
+        private int[] listValues; // List of specific values
+        private int step; // Step value for increments
 
+        /**
+         * Checks if the field is a wildcard.
+         * @return true if the field is a wildcard, false otherwise.
+         */
         public boolean isWildcard() { return wildcard; }
+
+        /**
+         * Sets the field as a wildcard.
+         * @param wildcard true to set the field as a wildcard, false otherwise.
+         */
         public void setWildcard(boolean wildcard) { this.wildcard = wildcard; }
 
+        /**
+         * Checks if the field is a range.
+         * @return true if the field is a range, false otherwise.
+         */
         public boolean isRange() { return rangeStart > 0 && rangeEnd > 0; }
+
+        /**
+         * Sets the range values for the field.
+         * @param rangeStart the start value of the range.
+         * @param rangeEnd the end value of the range.
+         */
         public void setRange(int rangeStart, int rangeEnd) {
             this.rangeStart = rangeStart;
             this.rangeEnd = rangeEnd;
         }
 
+        /**
+         * Checks if the field is a list of values.
+         * @return true if the field is a list, false otherwise.
+         */
         public boolean isList() { return listValues != null; }
+
+        /**
+         * Sets the list of values for the field.
+         * @param listValues an array of specific values.
+         */
         public void setListValues(int[] listValues) { this.listValues = listValues; }
 
+        /**
+         * Checks if the field is a step value.
+         * @return true if the field is a step, false otherwise.
+         */
         public boolean isStep() { return step > 0; }
+
+        /**
+         * Sets the step value for the field.
+         * @param step the step value.
+         */
         public void setStep(int step) { this.step = step; }
 
+        /**
+         * Gets the start value of the range.
+         * @return the start value of the range.
+         */
         public int getRangeStart() { return rangeStart; }
+
+        /**
+         * Gets the end value of the range.
+         * @return the end value of the range.
+         */
         public int getRangeEnd() { return rangeEnd; }
 
+        /**
+         * Gets the list of specific values.
+         * @return an array of specific values.
+         */
         public int[] getListValues() { return listValues; }
 
+        /**
+         * Gets the step value.
+         * @return the step value.
+         */
         public int getStep() { return step; }
     }
 }
