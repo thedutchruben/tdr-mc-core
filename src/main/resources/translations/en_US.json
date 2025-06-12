@@ -1,0 +1,16 @@
+{
+  "gui.pagination.previous_page": "&a&lPrevious Page",
+  "gui.pagination.next_page": "&a&lNext Page",
+  "gui.pagination.page_format": "Page %current%/%total%",
+  "gui.pagination.previous_page_tooltip": "&7Click to go to the previous page",
+  "gui.pagination.next_page_tooltip": "&7Click to go to the next page",
+  "gui.close": "&c&lClose",
+  "gui.close_tooltip": "&7Click to close this menu",
+  "gui.back": "&e&lBack",
+  "gui.back_tooltip": "&7Click to go back",
+  "gui.confirm": "&a&lConfirm",
+  "gui.confirm_tooltip": "&7Click to confirm",
+  "gui.cancel": "&c&lCancel",
+  "gui.cancel_tooltip": "&7Click to cancel"
+}
+

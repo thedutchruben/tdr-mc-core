@@ -6,9 +6,41 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.lang.reflect.Type;
-import java.util.Map;
 
 public class GsonUtil {
+    private static Gson gson;
+    private static Gson prettyGson;
+
+    /**
+     * Get a standard Gson instance
+     * @return A Gson instance with standard configuration
+     */
+    public static Gson getGson() {
+        if (gson == null) {
+            gson = new GsonBuilder()
+                    .disableHtmlEscaping()
+                    .registerTypeAdapter(ItemStack.class, new ItemStackAdapter())
+                    .registerTypeAdapter(Enchantment.class, new EnchantmentAdapter())
+                    .create();
+        }
+        return gson;
+    }
+
+    /**
+     * Get a Gson instance with pretty printing enabled
+     * @return A Gson instance with pretty printing
+     */
+    public static Gson getPrettyGson() {
+        if (prettyGson == null) {
+            prettyGson = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .disableHtmlEscaping()
+                    .registerTypeAdapter(ItemStack.class, new ItemStackAdapter())
+                    .registerTypeAdapter(Enchantment.class, new EnchantmentAdapter())
+                    .create();
+        }
+        return prettyGson;
+    }
 
     public static Gson createGson() {
         return new GsonBuilder()

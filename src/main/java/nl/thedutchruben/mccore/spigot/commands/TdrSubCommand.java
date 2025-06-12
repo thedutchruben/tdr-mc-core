@@ -14,7 +14,6 @@ public class TdrSubCommand {
         this.subCommand = subCommand;
     }
 
-
     public Method getMethod() {
         return method;
     }
@@ -27,4 +26,3 @@ public class TdrSubCommand {
         return subCommand;
     }
 }
-
