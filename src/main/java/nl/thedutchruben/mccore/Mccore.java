@@ -171,6 +171,16 @@ public final class Mccore {
             }
             return complete;
         });
+
+        CommandRegistry.getTabCompletable().put("color", commandSender -> {
+            Set<String> complete = new HashSet<>();
+            for (ChatColor color : ChatColor.values()) {
+                if (color.isColor()) {
+                    complete.add(color.name());
+                }
+            }
+            return complete;
+        });
     }
 
     public CachingManager getCachingManager() {
