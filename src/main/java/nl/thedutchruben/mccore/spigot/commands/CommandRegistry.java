@@ -13,70 +13,97 @@ import java.util.*;
 
 public class CommandRegistry implements CommandExecutor, TabCompleter {
     private Map<String, TdrCommand> commandMap = new HashMap<>();
-    public CommandFailureHandler failureHandler = (sender, reason, command,subCommand) -> {};
+    public CommandFailureHandler failureHandler = (sender, reason, command, subCommand) -> {};
     private static Map<String, TabComplete> tabCompletable = new HashMap<>();
 
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] strings) {
         final List<String> completions = new ArrayList<>();
         final Set<String> COMMANDS = new HashSet<>();
-        completions.add("help");
-        StringBuilder sb = new StringBuilder();
-        if(strings.length == 1){
-            for (int i = -1; i <= 0; i++) {
-                if (i == -1)
-                    sb.append(command.getName().toLowerCase());
-                else
-                    sb.append(" ").append(strings[i].toLowerCase());
+        
+        TdrCommand tdrCommand = commandMap.get(command.getName());
+        if (tdrCommand == null) return completions;
 
-                for (String usage : commandMap.keySet()) {
-                    TdrCommand wrapper = commandMap.get(usage);
-                    if (usage.equals(sb.toString())) {
-
-                        wrapper.getSubCommand().forEach((s1, subCommand) -> {
-                            if(commandSender.hasPermission(subCommand.getSubCommand().permission())){
-                                COMMANDS.add(s1);
-                            }
-                        });
+        if (strings.length == 1) {
+            // First level - show sub-command groups and direct sub-commands
+            completions.add("help");
+            
+            // Add sub-command groups
+            for (String groupName : tdrCommand.getSubCommandGroups().keySet()) {
+                TdrSubCommandGroup group = tdrCommand.getSubCommandGroups().get(groupName);
+                if (group.getSubCommandGroup().permission().isEmpty() || commandSender.hasPermission(group.getSubCommandGroup().permission())) {
+                    COMMANDS.add(groupName);
+                }
+            }
+            
+            // Add direct sub-commands for backward compatibility
+            for (String subCommandName : tdrCommand.getDirectSubCommands().keySet()) {
+                TdrSubCommand subCommand = tdrCommand.getDirectSubCommands().get(subCommandName);
+                if (subCommand.getSubCommand().permission().isEmpty() || commandSender.hasPermission(subCommand.getSubCommand().permission())) {
+                    COMMANDS.add(subCommandName);
+                }
+            }
+            
+            StringUtil.copyPartialMatches(strings[0], COMMANDS, completions);
+            
+        } else if (strings.length == 2) {
+            // Second level - if first arg is a sub-command group, show its sub-commands
+            TdrSubCommandGroup group = tdrCommand.getSubCommandGroup(strings[0]);
+            if (group != null) {
+                for (String subCommandName : group.getSubCommands().keySet()) {
+                    TdrSubCommand subCommand = group.getSubCommands().get(subCommandName);
+                    if (subCommand.getSubCommand().permission().isEmpty() || commandSender.hasPermission(subCommand.getSubCommand().permission())) {
+                        COMMANDS.add(subCommandName);
                     }
                 }
-                StringUtil.copyPartialMatches(strings[0], COMMANDS, completions);
-                Collections.sort(completions);
-
+                StringUtil.copyPartialMatches(strings[1], COMMANDS, completions);
             }
-        }
-
-        if(strings.length != 1){
-            TdrCommand wrapper = commandMap.get(command.getName());
-            if(wrapper.getSubCommand().get(strings[0]) != null){
-                List<String> list = new LinkedList<String>();
-                for (String s1 : wrapper.getSubCommand().get(strings[0]).getSubCommand().usage().split(" ")) {
-                    list.add(s1.replace("<","").replace(">",""));
+            
+        } else if (strings.length > 2) {
+            // Third level and beyond - handle parameters
+            TdrSubCommand targetSubCommand = null;
+            
+            // Check if it's a three-level command
+            TdrSubCommandGroup group = tdrCommand.getSubCommandGroup(strings[0]);
+            if (group != null) {
+                targetSubCommand = group.getSubCommands().get(strings[1]);
+            } else {
+                // Check if it's a direct sub-command
+                targetSubCommand = tdrCommand.getDirectSubCommands().get(strings[0]);
+            }
+            
+            if (targetSubCommand != null) {
+                List<String> usageParts = new ArrayList<>();
+                String usage = targetSubCommand.getSubCommand().usage();
+                if (!usage.isEmpty()) {
+                    for (String part : usage.split(" ")) {
+                        usageParts.add(part.replace("<", "").replace(">", ""));
+                    }
                 }
-
-                if(strings.length - 2 <= wrapper.getSubCommand().get(strings[0]).getSubCommand().maxParams()){
-                    if(!(strings.length > list.size() + 1) ){
-                        if(list.get(strings.length - 2) != null){
-                            TabComplete tabComplete = tabCompletable.get(list.get(strings.length - 2));
-                            if(tabComplete != null){
-                                for (String completion : tabComplete.getCompletions(commandSender)) {
-                                    COMMANDS.add(completion.replace(" ","_"));
-                                }
-                            }
+                
+                int paramIndex = group != null ? strings.length - 3 : strings.length - 2;
+                
+                if (paramIndex >= 0 && paramIndex < usageParts.size() && 
+                    paramIndex < targetSubCommand.getSubCommand().maxParams()) {
+                    
+                    String paramType = usageParts.get(paramIndex);
+                    TabComplete tabComplete = tabCompletable.get(paramType);
+                    if (tabComplete != null) {
+                        for (String completion : tabComplete.getCompletions(commandSender)) {
+                            COMMANDS.add(completion.replace(" ", "_"));
                         }
+                        StringUtil.copyPartialMatches(strings[strings.length - 1], COMMANDS, completions);
                     }
                 }
             }
-
-            StringUtil.copyPartialMatches(strings[strings.length-1], COMMANDS, completions);
-            Collections.sort(completions);
         }
 
+        Collections.sort(completions);
         return completions;
     }
 
     public interface CommandFailureHandler {
-        void handleFailure(CommandFailReason reason, CommandSender sender, TdrCommand command,TdrSubCommand tdrSubCommand);
+        void handleFailure(CommandFailReason reason, CommandSender sender, TdrCommand command, TdrSubCommand tdrSubCommand);
     }
 
     public CommandFailureHandler getFailureHandler() {
@@ -88,42 +115,90 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
     }
 
     public CommandRegistry(Mccore mccore) throws InstantiationException, IllegalAccessException {
+        scanForCommands(mccore);
+    }
 
-        for (Class<?> allClass : new ClassFinder().getClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
-            if(allClass.isAnnotationPresent(nl.thedutchruben.mccore.spigot.commands.Command.class)){
-                nl.thedutchruben.mccore.spigot.commands.Command an = allClass.getAnnotation(nl.thedutchruben.mccore.spigot.commands.Command.class);
-                TdrCommand tdrCommand = new TdrCommand(an);
-                for (Method method : allClass.getMethods()) {
-                    SubCommand annotation = method.getAnnotation(SubCommand.class);
-
-                    if (annotation != null) {
-                        PluginCommand basePluginCommand = mccore.getJavaPlugin().getServer().getPluginCommand(an.command());
-                        basePluginCommand.setDescription(an.description());
-                        basePluginCommand.setAliases(Arrays.asList(an.aliases()));
-                        basePluginCommand.setExecutor(this);
-                        basePluginCommand.setTabCompleter(this);
-                        tdrCommand.getSubCommand().put(annotation.subCommand(),new TdrSubCommand(method,allClass.newInstance(),annotation));
-                    }
-                    Default aDefault = method.getAnnotation(Default.class);
-
-                    if (aDefault != null) {
-                        tdrCommand.setaDefault(aDefault);
-                        tdrCommand.setDefaultCommand(new TdrSubCommand(method,allClass.newInstance(),annotation));
-                    }
-
-                    Fallback aFallback = method.getAnnotation(Fallback.class);
-
-                    if (aFallback != null) {
-                        tdrCommand.setaFallback(aFallback);
-                        tdrCommand.setFallBackCommand(new TdrSubCommand(method,allClass.newInstance(),annotation));
-                    }
-
-                }
-                commandMap.put(an.command(),tdrCommand);
+    private void scanForCommands(Mccore mccore) throws InstantiationException, IllegalAccessException {
+        for (Class<?> mainClass : new ClassFinder().getClasses(mccore.getJavaPlugin().getClass().getPackage().toString().split(" ")[1])) {
+            if (mainClass.isAnnotationPresent(nl.thedutchruben.mccore.spigot.commands.Command.class)) {
+                processCommandClass(mccore, mainClass);
             }
+        }
+    }
 
+    private void processCommandClass(Mccore mccore, Class<?> mainClass) throws InstantiationException, IllegalAccessException {
+        nl.thedutchruben.mccore.spigot.commands.Command commandAnnotation = 
+            mainClass.getAnnotation(nl.thedutchruben.mccore.spigot.commands.Command.class);
+        
+        TdrCommand tdrCommand = new TdrCommand(commandAnnotation);
+        Object mainInstance = mainClass.newInstance();
+
+        // Register the plugin command
+        PluginCommand basePluginCommand = mccore.getJavaPlugin().getServer().getPluginCommand(commandAnnotation.command());
+        if (basePluginCommand != null) {
+            basePluginCommand.setDescription(commandAnnotation.description());
+            basePluginCommand.setAliases(Arrays.asList(commandAnnotation.aliases()));
+            basePluginCommand.setExecutor(this);
+            basePluginCommand.setTabCompleter(this);
         }
 
+        // Process methods in the main class (direct sub-commands, default, fallback)
+        processMethodsInClass(mainClass, mainInstance, tdrCommand, null);
+
+        // Process nested classes (sub-command groups)
+        for (Class<?> nestedClass : mainClass.getDeclaredClasses()) {
+            if (nestedClass.isAnnotationPresent(SubCommandGroup.class)) {
+                processSubCommandGroup(nestedClass, tdrCommand);
+            }
+        }
+
+        commandMap.put(commandAnnotation.command(), tdrCommand);
+    }
+
+    private void processSubCommandGroup(Class<?> nestedClass, TdrCommand tdrCommand) throws InstantiationException, IllegalAccessException {
+        SubCommandGroup groupAnnotation = nestedClass.getAnnotation(SubCommandGroup.class);
+        Object groupInstance = nestedClass.newInstance();
+        
+        TdrSubCommandGroup subCommandGroup = new TdrSubCommandGroup(groupAnnotation, groupInstance);
+        
+        // Process methods in the nested class
+        processMethodsInClass(nestedClass, groupInstance, tdrCommand, subCommandGroup);
+        
+        tdrCommand.addSubCommandGroup(groupAnnotation.value(), subCommandGroup);
+    }
+
+    private void processMethodsInClass(Class<?> clazz, Object instance, TdrCommand tdrCommand, TdrSubCommandGroup subCommandGroup) {
+        for (Method method : clazz.getMethods()) {
+            // Process SubCommand annotation
+            SubCommand subCommandAnnotation = method.getAnnotation(SubCommand.class);
+            if (subCommandAnnotation != null) {
+                TdrSubCommand tdrSubCommand = new TdrSubCommand(method, instance, subCommandAnnotation);
+                
+                if (subCommandGroup != null) {
+                    // Add to sub-command group
+                    subCommandGroup.addSubCommand(subCommandAnnotation.subCommand(), tdrSubCommand);
+                } else {
+                    // Add as direct sub-command
+                    tdrCommand.addDirectSubCommand(subCommandAnnotation.subCommand(), tdrSubCommand);
+                }
+            }
+
+            // Process Default annotation (only for main class)
+            if (subCommandGroup == null) {
+                Default defaultAnnotation = method.getAnnotation(Default.class);
+                if (defaultAnnotation != null) {
+                    tdrCommand.setaDefault(defaultAnnotation);
+                    tdrCommand.setDefaultCommand(new TdrSubCommand(method, instance, null));
+                }
+
+                // Process Fallback annotation (only for main class)
+                Fallback fallbackAnnotation = method.getAnnotation(Fallback.class);
+                if (fallbackAnnotation != null) {
+                    tdrCommand.setaFallback(fallbackAnnotation);
+                    tdrCommand.setFallBackCommand(new TdrSubCommand(method, instance, null));
+                }
+            }
+        }
     }
 
     public enum CommandFailReason {
@@ -135,113 +210,184 @@ public class CommandRegistry implements CommandExecutor, TabCompleter {
         REFLECTION_ERROR
     }
 
-    /**
-     * Executes the given command, returning its success.
-     * <br>
-     * If false is returned, then the "usage" plugin.yml entry for this command
-     * (if defined) will be sent to the player.
-     *
-     * @param sender  Source of the command
-     * @param command Command which was executed
-     * @param label   Alias of the command which was used
-     * @param args    Passed command arguments
-     * @return true if a valid command, otherwise false
-     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = -1; i <= args.length - 1; i++) {
-            if (i == -1)
-                sb.append(command.getName().toLowerCase());
-            else
-                sb.append(" ").append(args[i].toLowerCase());
+        TdrCommand tdrCommand = commandMap.get(command.getName());
+        if (tdrCommand == null) {
+            failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, null, null);
+            return false;
+        }
 
-            for (String usage : commandMap.keySet()) {
+        // Check main command permission
+        nl.thedutchruben.mccore.spigot.commands.Command commandData = tdrCommand.getCommand();
+        if (!commandData.permission().equals("") && !sender.hasPermission(commandData.permission())) {
+            failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, tdrCommand, null);
+            return true;
+        }
 
-                if (usage.equals(sb.toString())) {
+        // Handle help command
+        if (args.length > 0 && args[0].equalsIgnoreCase("help")) {
+            displayHelp(sender, tdrCommand);
+            return true;
+        }
 
-                    TdrCommand wrapper = commandMap.get(usage);
-                    nl.thedutchruben.mccore.spigot.commands.Command commanddata =  wrapper.getCommand();
+        // Handle no arguments (default command)
+        if (args.length == 0) {
+            if (tdrCommand.getDefaultCommand() != null) {
+                return executeSubCommand(sender, tdrCommand, tdrCommand.getDefaultCommand(), new String[0]);
+            }
+            failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, tdrCommand, null);
+            return true;
+        }
 
-                    if (!commanddata.permission().equals("") && !sender.hasPermission(commanddata.permission())) {
-                        failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper,null);
-                        return true;
-                    }
+        // Handle single argument
+        if (args.length == 1) {
+            // Check if it's a sub-command group
+            TdrSubCommandGroup group = tdrCommand.getSubCommandGroup(args[0]);
+            if (group != null) {
+                // Show help for this sub-command group
+                displaySubCommandGroupHelp(sender, tdrCommand, group);
+                return true;
+            }
+            
+            // Check if it's a direct sub-command
+            TdrSubCommand directSubCommand = tdrCommand.getDirectSubCommands().get(args[0]);
+            if (directSubCommand != null) {
+                return executeSubCommand(sender, tdrCommand, directSubCommand, Arrays.copyOfRange(args, 1, args.length));
+            }
+            
+            // Check fallback
+            if (tdrCommand.getFallBackCommand() != null) {
+                return executeSubCommand(sender, tdrCommand, tdrCommand.getFallBackCommand(), args);
+            }
+            
+            failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, tdrCommand, null);
+            return true;
+        }
 
-                    TdrSubCommand annotation = null;
-                    if(args.length == 0){
-                        annotation = wrapper.getDefaultCommand();
-                    }else if(wrapper.getSubCommand().get(args[0]) != null || args[0].equalsIgnoreCase("help")){
-                        if(args[0].equalsIgnoreCase("help")){
-                            sender.sendMessage(ChatColor.GOLD+"----------"+ChatColor.WHITE+"Help : " + commanddata.command() +ChatColor.GOLD+ " ----------");
-                            sender.sendMessage(ChatColor.GOLD +"/"+ commanddata.command() + " " +ChatColor.GRAY  + " : " +ChatColor.WHITE + wrapper.getDefaultCommand().getSubCommand().description());
-                            wrapper.getSubCommand().forEach((s, tdrSubCommand) -> {
-                                if(tdrSubCommand.getSubCommand().subCommand() != null || !Objects.equals(tdrSubCommand.getSubCommand().subCommand(), "")){
-                                    sender.sendMessage(ChatColor.GOLD +"/"+ commanddata.command() + " "+ ChatColor.WHITE +tdrSubCommand.getSubCommand().subCommand() + " " +ChatColor.GRAY + tdrSubCommand.getSubCommand().usage() + " : " +ChatColor.WHITE + tdrSubCommand.getSubCommand().description());
-                                }else{
-                                    sender.sendMessage(ChatColor.GOLD +"/"+ commanddata.command() +ChatColor.GRAY +  " : " +ChatColor.WHITE + tdrSubCommand.getSubCommand().description());
+        // Handle two or more arguments
+        if (args.length >= 2) {
+            // Check if first argument is a sub-command group
+            TdrSubCommandGroup group = tdrCommand.getSubCommandGroup(args[0]);
+            if (group != null) {
+                TdrSubCommand subCommand = group.getSubCommands().get(args[1]);
+                if (subCommand != null) {
+                    return executeSubCommand(sender, tdrCommand, subCommand, Arrays.copyOfRange(args, 2, args.length));
+                }
+                failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, tdrCommand, null);
+                return true;
+            }
+            
+            // Check if first argument is a direct sub-command
+            TdrSubCommand directSubCommand = tdrCommand.getDirectSubCommands().get(args[0]);
+            if (directSubCommand != null) {
+                return executeSubCommand(sender, tdrCommand, directSubCommand, Arrays.copyOfRange(args, 1, args.length));
+            }
+            
+            // Check fallback
+            if (tdrCommand.getFallBackCommand() != null) {
+                return executeSubCommand(sender, tdrCommand, tdrCommand.getFallBackCommand(), args);
+            }
+        }
 
-                                }
-                            });
+        failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, tdrCommand, null);
+        return true;
+    }
 
-                            return true;
-                        }
-                        annotation = wrapper.getSubCommand().get(args[0]);
-                    }else{
-                        annotation = wrapper.getFallBackCommand();
-                    }
+    private boolean executeSubCommand(CommandSender sender, TdrCommand tdrCommand, TdrSubCommand subCommand, String[] args) {
+        SubCommand subCommandAnnotation = subCommand.getSubCommand();
+        
+        // Check permission
+        if (subCommandAnnotation != null && !subCommandAnnotation.permission().isEmpty() && !sender.hasPermission(subCommandAnnotation.permission())) {
+            failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, tdrCommand, subCommand);
+            return true;
+        }
 
-                    if(annotation == null){
-                        failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, wrapper,null);
-                        return true;
-                    }
+        // Parse parameters
+        List<String> params = parseParameters(args);
 
-                    if (!annotation.getSubCommand().permission().isEmpty() && !sender.hasPermission(annotation.getSubCommand().permission())) {
-                        failureHandler.handleFailure(CommandFailReason.NO_PERMISSION, sender, wrapper, annotation);
-                        return true;
-                    }
+        // Check parameter count
+        if (subCommandAnnotation != null) {
+            if (params.size() < subCommandAnnotation.minParams() || params.size() > subCommandAnnotation.maxParams()) {
+                failureHandler.handleFailure(CommandFailReason.INSUFFICIENT_PARAMETER, sender, tdrCommand, subCommand);
+                return true;
+            }
+        }
 
-                    String[] actualParams = Arrays.copyOfRange(args, annotation.getSubCommand().subCommand().split(" ").length - 1, args.length);
-                    List<String> params = new ArrayList<>();
-                    StringBuilder combine = new StringBuilder();
-                    boolean combineNext = false;
+        // Execute the command
+        try {
+            subCommand.getMethod().invoke(subCommand.getInstance(), sender, params);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+            failureHandler.handleFailure(CommandFailReason.REFLECTION_ERROR, sender, tdrCommand, subCommand);
+        }
 
-                    for (String param : actualParams) {
-                        if (param.startsWith("\"") && param.endsWith("\"")) {
-                            params.add(param.replace("\"", ""));
-                        } else if (param.startsWith("\"")) {
-                            combineNext = true;
-                            combine.append(param);
-                        } else if (param.endsWith("\"")) {
-                            combineNext = false;
-                            combine.append(" ").append(param);
-                            params.add(combine.toString().replace("\"", ""));
-                        } else {
-                            if (combineNext) {
-                                combine.append(" ").append(param);
-                            } else {
-                                params.add(param);
-                            }
-                        }
-                    }
+        return true;
+    }
 
-                    if (params.size() < annotation.getSubCommand().minParams() || params.size() > annotation.getSubCommand().maxParams()) {
-                        failureHandler.handleFailure(CommandFailReason.INSUFFICIENT_PARAMETER, sender, wrapper, annotation);
-                        return true;
-                    }
+    private List<String> parseParameters(String[] args) {
+        List<String> params = new ArrayList<>();
+        StringBuilder combine = new StringBuilder();
+        boolean combineNext = false;
 
-                    try {
-                        annotation.getMethod().invoke(annotation.getInstance(), sender, params);
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
-                    }
-                    return true;
+        for (String param : args) {
+            if (param.startsWith("\"") && param.endsWith("\"")) {
+                params.add(param.replace("\"", ""));
+            } else if (param.startsWith("\"")) {
+                combineNext = true;
+                combine.append(param);
+            } else if (param.endsWith("\"")) {
+                combineNext = false;
+                combine.append(" ").append(param);
+                params.add(combine.toString().replace("\"", ""));
+                combine = new StringBuilder();
+            } else {
+                if (combineNext) {
+                    combine.append(" ").append(param);
+                } else {
+                    params.add(param);
                 }
             }
         }
 
-        failureHandler.handleFailure(CommandFailReason.COMMAND_NOT_FOUND, sender, null,null);
-        return false;
+        return params;
+    }
+
+    private void displayHelp(CommandSender sender, TdrCommand tdrCommand) {
+        nl.thedutchruben.mccore.spigot.commands.Command commandData = tdrCommand.getCommand();
+        sender.sendMessage(ChatColor.GOLD + "----------" + ChatColor.WHITE + "Help : " + commandData.command() + ChatColor.GOLD + " ----------");
+        
+        // Show default command
+        if (tdrCommand.getDefaultCommand() != null) {
+            sender.sendMessage(ChatColor.GOLD + "/" + commandData.command() + " " + ChatColor.GRAY + " : " + ChatColor.WHITE + "Default command");
+        }
+        
+        // Show direct sub-commands
+        for (Map.Entry<String, TdrSubCommand> entry : tdrCommand.getDirectSubCommands().entrySet()) {
+            TdrSubCommand subCommand = entry.getValue();
+            sender.sendMessage(ChatColor.GOLD + "/" + commandData.command() + " " + ChatColor.WHITE + entry.getKey() + 
+                             " " + ChatColor.GRAY + subCommand.getSubCommand().usage() + " : " + ChatColor.WHITE + subCommand.getSubCommand().description());
+        }
+        
+        // Show sub-command groups
+        for (Map.Entry<String, TdrSubCommandGroup> entry : tdrCommand.getSubCommandGroups().entrySet()) {
+            TdrSubCommandGroup group = entry.getValue();
+            sender.sendMessage(ChatColor.GOLD + "/" + commandData.command() + " " + ChatColor.WHITE + entry.getKey() + 
+                             " " + ChatColor.GRAY + "<subcommand> : " + ChatColor.WHITE + group.getSubCommandGroup().description());
+        }
+    }
+
+    private void displaySubCommandGroupHelp(CommandSender sender, TdrCommand tdrCommand, TdrSubCommandGroup group) {
+        nl.thedutchruben.mccore.spigot.commands.Command commandData = tdrCommand.getCommand();
+        sender.sendMessage(ChatColor.GOLD + "----------" + ChatColor.WHITE + "Help : " + commandData.command() + " " + 
+                         group.getSubCommandGroup().value() + ChatColor.GOLD + " ----------");
+        
+        for (Map.Entry<String, TdrSubCommand> entry : group.getSubCommands().entrySet()) {
+            TdrSubCommand subCommand = entry.getValue();
+            sender.sendMessage(ChatColor.GOLD + "/" + commandData.command() + " " + group.getSubCommandGroup().value() + " " + 
+                             ChatColor.WHITE + entry.getKey() + " " + ChatColor.GRAY + subCommand.getSubCommand().usage() + 
+                             " : " + ChatColor.WHITE + subCommand.getSubCommand().description());
+        }
     }
 
     public static Map<String, TabComplete> getTabCompletable() {

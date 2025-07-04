@@ -15,12 +15,17 @@ public class TdrCommand {
     private TdrSubCommand defaultCommand;
     @Getter
     private TdrSubCommand fallBackCommand;
-    private Map<String,TdrSubCommand> subCommand;
+    
+    // Changed from direct sub-commands to sub-command groups
+    private Map<String, TdrSubCommandGroup> subCommandGroups;
+    
+    // Keep legacy direct sub-commands for backward compatibility
+    private Map<String, TdrSubCommand> directSubCommands;
 
     public TdrCommand(Command command) {
-
         this.command = command;
-        this.subCommand = new HashMap<>();
+        this.subCommandGroups = new HashMap<>();
+        this.directSubCommands = new HashMap<>();
     }
 
     public void setDefaultCommand(TdrSubCommand defaultCommand) {
@@ -47,7 +52,33 @@ public class TdrCommand {
         return command;
     }
 
+    public Map<String, TdrSubCommandGroup> getSubCommandGroups() {
+        return subCommandGroups;
+    }
+
+    public Map<String, TdrSubCommand> getDirectSubCommands() {
+        return directSubCommands;
+    }
+
+    public void addSubCommandGroup(String name, TdrSubCommandGroup group) {
+        subCommandGroups.put(name, group);
+    }
+
+    public void addDirectSubCommand(String name, TdrSubCommand subCommand) {
+        directSubCommands.put(name, subCommand);
+    }
+
+    public TdrSubCommandGroup getSubCommandGroup(String name) {
+        return subCommandGroups.get(name);
+    }
+
+    public TdrSubCommand getDirectSubCommand(String name) {
+        return directSubCommands.get(name);
+    }
+
+    // Legacy method for backward compatibility
+    @Deprecated
     public Map<String, TdrSubCommand> getSubCommand() {
-        return subCommand;
+        return directSubCommands;
     }
 }
