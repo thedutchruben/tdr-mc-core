@@ -1,8 +1,10 @@
 nl.thedutchruben.mccore
 nl.thedutchruben.mccore.bungee.commands
 nl.thedutchruben.mccore.config
+nl.thedutchruben.mccore.examples
 nl.thedutchruben.mccore.global.caching
 nl.thedutchruben.mccore.global.caching.fileSystemTypes
+nl.thedutchruben.mccore.global.translations
 nl.thedutchruben.mccore.spigot.commands
 nl.thedutchruben.mccore.spigot.listeners
 nl.thedutchruben.mccore.spigot.runnables
