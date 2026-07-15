@@ -114,8 +114,8 @@ TDR MC Core features a unique three-level command hierarchy:
 
 ## Requirements
 
-- Java 8+
-- Spigot/Paper 1.20.1+ or BungeeCord 1.20+
+- Java 17+
+- Spigot/Paper 26.2+ or BungeeCord 1.21+
 - Maven (for building)
 
 ## Building
