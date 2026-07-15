@@ -301,7 +301,7 @@ public class ItemBuilder {
 
     /** Makes the ItemStack Glow like it had a Enchantment */
     public ItemBuilder glow() {
-        enchant(material != Material.BOW ? Enchantment.ARROW_INFINITE : Enchantment.LUCK, 10);
+        enchant(material != Material.BOW ? Enchantment.INFINITY : Enchantment.LUCK_OF_THE_SEA, 10);
         flag(ItemFlag.HIDE_ENCHANTS);
         return this;
     }
