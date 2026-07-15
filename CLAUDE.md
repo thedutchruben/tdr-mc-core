@@ -109,12 +109,12 @@ GUIs extend base classes and override click handlers, with automatic inventory m
 Built-in tab completions available: `player`, `uuid`, `world`, `material`, `entitytype`, `permission`, `color`, `plugin`. Register custom completions via `CommandRegistry.getTabCompletable()`.
 
 **Testing:**
-- Tests use JUnit Jupiter 5.12.0
+- Tests use JUnit Jupiter 6.1.2 and Mockito
 - Currently minimal test coverage (placeholder test in `TabCompleteTest`)
 - Test files should follow naming convention `*Test.java`
 
 **Dependencies:**
-- Spigot API 1.20.1+ (provided scope)
+- Spigot API 26.2+ (provided scope)
 - BungeeCord API (provided scope)
 - Lombok for code generation
 - Gson for JSON operations (via utilities)

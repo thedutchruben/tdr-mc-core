@@ -22,7 +22,7 @@ public class AnimationExamples {
         ParticleAnimation.Circle circleAnimation = new ParticleAnimation.Circle(
             plugin,
             center,
-            Particle.VILLAGER_HAPPY,
+            Particle.HAPPY_VILLAGER,
             3.0, // radius
             20,  // points
             100, // duration (5 seconds at 20 ticks/second)
@@ -39,7 +39,7 @@ public class AnimationExamples {
         ParticleAnimation.Spiral spiralAnimation = new ParticleAnimation.Spiral(
             plugin,
             base,
-            Particle.ENCHANTMENT_TABLE,
+            Particle.ENCHANT,
             2.0, // max radius
             5.0, // height
             3.0, // spiral turns
@@ -55,7 +55,7 @@ public class AnimationExamples {
         ParticleAnimation.Wave waveAnimation = new ParticleAnimation.Wave(
             plugin,
             start,
-            Particle.DRIP_WATER,
+            Particle.DRIPPING_WATER,
             1.0, // amplitude
             2.0, // wavelength
             10.0, // length
@@ -72,7 +72,7 @@ public class AnimationExamples {
         ParticleAnimation.Explosion explosionAnimation = new ParticleAnimation.Explosion(
             plugin,
             center,
-            Particle.EXPLOSION_LARGE,
+            Particle.EXPLOSION,
             5.0, // max radius
             50,  // particle count
             30,  // duration
@@ -87,7 +87,7 @@ public class AnimationExamples {
         ParticleAnimation.Path pathAnimation = new ParticleAnimation.Path(
             plugin,
             start,
-            Particle.REDSTONE,
+            Particle.DUST,
             Arrays.asList(
                 new Vector(0, 0, 0),
                 new Vector(2, 1, 0),
@@ -148,7 +148,7 @@ public class AnimationExamples {
         
         // Rising spiral
         ParticleAnimation.Spiral spiral = new ParticleAnimation.Spiral(
-            plugin, center, Particle.ENCHANTMENT_TABLE, 2.0, 8.0, 4.0, 200, 1
+            plugin, center, Particle.ENCHANT, 2.0, 8.0, 4.0, 200, 1
         );
         
         // Explosions at intervals

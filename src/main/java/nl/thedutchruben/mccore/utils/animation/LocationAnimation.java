@@ -89,7 +89,7 @@ public class LocationAnimation extends Animation {
     }
     
     public static class Builder {
-        private final LocationAnimation animation;
+        protected final LocationAnimation animation;
         
         public Builder(Plugin plugin, int duration, Consumer<Location> locationConsumer) {
             this.animation = new LocationAnimation(plugin, duration, 1, locationConsumer);
